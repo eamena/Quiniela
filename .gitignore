@@ -1,0 +1,6 @@
+node_modules/
+data.db
+.env
+*.db
+*.log
+Participantes Amigos Mundial 2026.xlsx

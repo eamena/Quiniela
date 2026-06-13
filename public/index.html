@@ -1,0 +1,1888 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>World Cup Prediction Pool</title>
+    <style>
+      :root {
+        --bg-start: #0f172a;
+        --bg-end: #1e3a8a;
+        --surface: #ffffff;
+        --text: #0f172a;
+        --muted: #64748b;
+        --primary: #7c3aed;
+        --secondary: #0891b2;
+        --success: #16a34a;
+        --warning: #ea580c;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Segoe UI", Arial, sans-serif;
+        background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
+        color: #f8fafc;
+      }
+
+      .container {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 24px 16px 28px;
+      }
+
+      .hero {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 2rem;
+      }
+
+      .muted {
+        color: #cbd5e1;
+      }
+
+      .toolbar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin: 16px 0 14px;
+      }
+
+      .tabs {
+        display: inline-flex;
+        background: rgba(15, 23, 42, 0.45);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 999px;
+        padding: 3px;
+      }
+
+      .tab {
+        border: 0;
+        background: transparent;
+        color: #e2e8f0;
+        padding: 8px 14px;
+        border-radius: 999px;
+        cursor: pointer;
+        font-weight: 600;
+      }
+
+      .tab.active {
+        background: #ffffff;
+        color: var(--primary);
+      }
+
+      .btn {
+        border: 0;
+        border-radius: 10px;
+        cursor: pointer;
+        padding: 9px 13px;
+        color: #fff;
+        font-weight: 600;
+      }
+
+      .btn.primary {
+        background: linear-gradient(90deg, var(--primary), #9333ea);
+      }
+
+      .btn.secondary {
+        background: linear-gradient(90deg, var(--secondary), #0e7490);
+      }
+
+      .select {
+        min-width: 220px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 10px;
+        background: rgba(15, 23, 42, 0.45);
+        color: #f8fafc;
+        padding: 9px 10px;
+      }
+
+      .lang-select {
+        min-width: 120px;
+      }
+
+      .status {
+        margin-left: auto;
+        color: #cbd5e1;
+        max-width: 280px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .sync-meta {
+        color: #dbeafe;
+        font-size: 0.86rem;
+      }
+
+      .knockout-banner {
+        background: rgba(251, 191, 36, 0.22);
+        border: 1px solid rgba(251, 191, 36, 0.6);
+        color: #fef3c7;
+        border-radius: 12px;
+        padding: 10px 12px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+
+      .metric {
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 14px;
+        padding: 12px;
+      }
+
+      .metric .label {
+        display: block;
+        font-size: 0.85rem;
+        color: #dbeafe;
+      }
+
+      .metric .value {
+        margin-top: 3px;
+        font-size: 1.3rem;
+        font-weight: 700;
+      }
+
+      .panel {
+        background: var(--surface);
+        color: var(--text);
+        border-radius: 16px;
+        box-shadow: 0 16px 34px rgba(15, 23, 42, 0.2);
+        padding: 14px;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+
+      h2 {
+        margin: 4px 0 12px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      .table-scroll {
+        overflow-x: auto;
+        max-height: 460px;
+        overflow-y: auto;
+      }
+
+      .sticky-table thead th {
+        position: sticky;
+        top: 0;
+        background: #fff;
+        z-index: 2;
+      }
+
+      th,
+      td {
+        padding: 9px 8px;
+        border-bottom: 1px solid #e2e8f0;
+        text-align: left;
+      }
+
+      th {
+        color: #334155;
+      }
+
+      .center {
+        text-align: center;
+      }
+
+      .pill {
+        display: inline-block;
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 4px 8px;
+        border-radius: 999px;
+      }
+
+      .pill.finished {
+        background: #dcfce7;
+        color: #166534;
+      }
+
+      .pill.scheduled {
+        background: #f1f5f9;
+        color: #475569;
+      }
+
+      .pill.live {
+        background: #ffedd5;
+        color: #9a3412;
+      }
+
+      .pts {
+        font-weight: 700;
+      }
+
+      .pts.good {
+        color: var(--success);
+      }
+
+      .pts.none {
+        color: var(--muted);
+      }
+
+      .timeline-table th,
+      .timeline-table td {
+        white-space: nowrap;
+      }
+
+      .timeline-filters {
+        display: inline-flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+      }
+
+      .filter-chip {
+        border: 1px solid #d1d5db;
+        background: #f8fafc;
+        color: #334155;
+        border-radius: 999px;
+        padding: 5px 11px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        font-weight: 700;
+      }
+
+      .filter-chip.active {
+        background: #e9d5ff;
+        color: #6d28d9;
+        border-color: #c4b5fd;
+      }
+
+      .standings-row {
+        cursor: pointer;
+        transition: background-color 0.15s ease;
+      }
+
+      .standings-row:hover {
+        background: #f8fafc;
+      }
+
+      .podium {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      .podium-card {
+        border-radius: 14px;
+        padding: 10px;
+        color: #0f172a;
+      }
+
+      .podium-card.rank-1 {
+        background: linear-gradient(135deg, #fde68a, #f59e0b);
+      }
+
+      .podium-card.rank-2 {
+        background: linear-gradient(135deg, #e2e8f0, #94a3b8);
+      }
+
+      .podium-card.rank-3 {
+        background: linear-gradient(135deg, #fdba74, #fb923c);
+      }
+
+      .podium-rank {
+        font-size: 0.78rem;
+        font-weight: 800;
+      }
+
+      .podium-name {
+        margin-top: 4px;
+        font-weight: 800;
+      }
+
+      .podium-points {
+        margin-top: 3px;
+        font-size: 0.9rem;
+      }
+
+      .help-inline {
+        font-size: 0.82rem;
+        color: #475569;
+        margin-left: 8px;
+      }
+
+      .participant-toolbar {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .select.light {
+        border-color: #dbe2ea;
+        background: #f8fafc;
+        color: #0f172a;
+      }
+
+      .recent-update {
+        animation: pulse-highlight 4s ease;
+      }
+
+      .points-badge {
+        display: inline-block;
+        min-width: 34px;
+        text-align: center;
+        border-radius: 999px;
+        padding: 3px 8px;
+        font-size: 0.76rem;
+        font-weight: 800;
+      }
+
+      .points-badge.points-5 {
+        background: #dcfce7;
+        color: #166534;
+      }
+
+      .points-badge.points-2 {
+        background: #dbeafe;
+        color: #1d4ed8;
+      }
+
+      .points-badge.points-0 {
+        background: #f1f5f9;
+        color: #475569;
+      }
+
+      .participant-mini {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 10px;
+        margin-bottom: 10px;
+      }
+
+      .knockout-editor {
+        margin: 12px 0;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 10px;
+        background: #f8fafc;
+      }
+
+      .knockout-editor summary {
+        cursor: pointer;
+        margin-bottom: 8px;
+      }
+
+      .knockout-editor .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+      }
+
+      .small-note {
+        font-size: 0.82rem;
+        color: #475569;
+      }
+
+      .knockout-input {
+        width: 54px;
+        padding: 6px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+      }
+
+      .team-with-flag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+      }
+
+      .flag-icon {
+        width: 18px;
+        height: 14px;
+        display: inline-block;
+        border-radius: 2px;
+        overflow: hidden;
+        flex: 0 0 auto;
+        background: #e2e8f0;
+      }
+
+      .flag-icon img {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: cover;
+      }
+
+      .identity-dialog {
+        border: none;
+        border-radius: 14px;
+        padding: 0;
+        width: min(460px, 92vw);
+      }
+
+      .identity-dialog::backdrop {
+        background: rgba(15, 23, 42, 0.45);
+      }
+
+      .identity-dialog-content {
+        padding: 16px;
+      }
+
+      .identity-dialog-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .participant-mini-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+      }
+
+      .mini-item .k {
+        font-size: 0.78rem;
+        color: #64748b;
+      }
+
+      .mini-item .v {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #0f172a;
+      }
+
+      .timeline-cards {
+        display: none;
+      }
+
+      .timeline-card {
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 10px;
+        margin-bottom: 8px;
+      }
+
+      @keyframes pulse-highlight {
+        0% {
+          background-color: #fef9c3;
+        }
+        100% {
+          background-color: transparent;
+        }
+      }
+
+      @media (max-width: 1020px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+
+        .cards {
+          grid-template-columns: 1fr 1fr;
+        }
+
+        .podium {
+          grid-template-columns: 1fr;
+        }
+
+        .participant-mini-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+
+      @media (max-width: 620px) {
+        .cards {
+          grid-template-columns: 1fr;
+        }
+
+        .status {
+          margin-left: 0;
+          width: 100%;
+        }
+
+        .timeline-table {
+          display: none;
+        }
+
+        .timeline-cards {
+          display: block;
+          margin-top: 8px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header class="hero">
+        <div>
+          <h1 data-i18n="appTitle">World Cup Prediction Pool</h1>
+          <div class="muted" data-i18n="appSubtitle">Live standings and participant predictions</div>
+        </div>
+      </header>
+
+      <div class="toolbar">
+        <div class="tabs">
+          <button class="tab active" data-view="overview" data-i18n="tabOverview">Overview</button>
+          <button class="tab" data-view="participant" data-i18n="tabParticipant">Participant view</button>
+        </div>
+        <button class="btn primary" id="refresh" data-i18n="btnRefresh">Refresh</button>
+        <button class="btn secondary" id="sync" data-i18n="btnSync">Sync scores now</button>
+        <label class="muted" for="languageSelect" data-i18n="languageLabel">Language</label>
+        <select class="select lang-select" id="languageSelect">
+          <option value="en">English</option>
+          <option value="es">Español</option>
+        </select>
+        <span class="sync-meta" id="syncMeta"></span>
+        <span class="status" id="status"></span>
+      </div>
+      <div class="knockout-banner" id="knockoutBanner" style="display:none">
+        <span id="knockoutBannerText"></span>
+        <button class="btn secondary" id="openKnockoutFromBanner" data-i18n="openBracketBtn">Open bracket predictions</button>
+      </div>
+      <dialog id="participantIdentityDialog" class="identity-dialog">
+        <form method="dialog" class="identity-dialog-content">
+          <h3 style="margin:0 0 8px" data-i18n="identityPromptTitle">Select your participant name</h3>
+          <div class="small-note" style="margin-bottom:8px" data-i18n="identityPromptBody">Choose your name to link your bracket submission.</div>
+          <select class="select light" id="participantIdentitySelect"></select>
+          <div class="small-note" style="margin-top:10px" data-i18n="identityPromptWarning">Once submitted, predictions cannot be changed.</div>
+          <div class="identity-dialog-actions">
+            <button class="btn secondary" value="cancel" data-i18n="identityCancelBtn">Cancel</button>
+            <button class="btn primary" value="confirm" data-i18n="identityContinueBtn">Continue</button>
+          </div>
+        </form>
+      </dialog>
+
+      <div id="overviewView">
+        <div class="podium" id="podium"></div>
+        <div class="cards">
+          <div class="metric">
+            <span class="label" data-i18n="metricParticipants">Participants</span>
+            <span class="value" id="metricParticipants">0</span>
+          </div>
+          <div class="metric">
+            <span class="label" data-i18n="metricMatchesWithResult">Matches with result</span>
+            <span class="value" id="metricFinished">0</span>
+          </div>
+          <div class="metric">
+            <span class="label" data-i18n="metricCurrentLeader">Current leader</span>
+            <span class="value" id="metricLeader">-</span>
+          </div>
+          <div class="metric">
+            <span class="label" data-i18n="metricTopPoints">Top points</span>
+            <span class="value" id="metricTopPoints">0</span>
+          </div>
+        </div>
+
+        <div class="grid">
+          <section class="panel">
+            <h2 data-i18n="standingsTitle">Standings</h2>
+            <details class="help-inline">
+              <summary data-i18n="tieBreakerTitle">Tie-break rules</summary>
+              <div data-i18n="tieBreakerBody">Sort by points, then exact hits, then outcome hits.</div>
+            </details>
+            <div class="table-scroll">
+              <table class="sticky-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th data-i18n="thParticipant">Participant</th>
+                  <th class="center" data-i18n="thPts">Pts</th>
+                  <th class="center" data-i18n="thExact">Exact</th>
+                  <th class="center" data-i18n="thOutcome">Outcome</th>
+                </tr>
+              </thead>
+              <tbody id="standingsBody"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="panel">
+            <h2 data-i18n="timelineTitle">Match timeline</h2>
+            <div class="timeline-filters">
+              <button class="filter-chip active" data-filter="all" data-i18n="filterAll">All</button>
+              <button class="filter-chip" data-filter="finished" data-i18n="filterFinished">Finished</button>
+              <button class="filter-chip" data-filter="live" data-i18n="filterLive">Live</button>
+              <button class="filter-chip" data-filter="scheduled" data-i18n="filterUpcoming">Upcoming</button>
+            </div>
+            <div class="table-scroll">
+              <table class="timeline-table sticky-table">
+              <thead>
+                <tr>
+                  <th data-i18n="thDate">Date</th>
+                  <th data-i18n="thLocalTime">Local time</th>
+                  <th data-i18n="thMatch">Match</th>
+                  <th class="center" data-i18n="thScore">Score</th>
+                  <th data-i18n="thStatus">Status</th>
+                </tr>
+              </thead>
+              <tbody id="matchesBody"></tbody>
+              </table>
+            </div>
+            <div class="timeline-cards" id="timelineCards"></div>
+          </section>
+        </div>
+      </div>
+
+      <div id="participantView" class="hidden">
+        <section class="panel">
+          <h2 data-i18n="participantPredictionsTitle">Participant predictions</h2>
+          <div class="toolbar participant-toolbar" style="margin-top: 0">
+            <input class="select light" id="participantSearch" data-i18n-placeholder="participantSearchPlaceholder" placeholder="Search participant" />
+            <select class="select light" id="participantSelect"></select>
+            <button class="btn secondary" id="loadTestParticipant" data-i18n="loadTestParticipantBtn">Load test participant</button>
+          </div>
+
+          <div class="participant-mini">
+            <div class="participant-mini-grid">
+              <div class="mini-item"><div class="k" data-i18n="miniRank">Rank</div><div class="v" id="miniRank">-</div></div>
+              <div class="mini-item"><div class="k" data-i18n="miniTotal">Total</div><div class="v" id="miniTotal">0</div></div>
+              <div class="mini-item"><div class="k" data-i18n="miniExact">Exact</div><div class="v" id="miniExact">0</div></div>
+              <div class="mini-item"><div class="k" data-i18n="miniBestMatch">Best match</div><div class="v" id="miniBestMatch">-</div></div>
+            </div>
+
+            <details class="knockout-editor" id="knockoutEditorPanel" open>
+              <summary class="small-note" data-i18n="knockoutEditorToggle">Show/hide knockout prediction editor</summary>
+              <div class="header">
+                <h3 style="margin:0" data-i18n="knockoutEditorTitle">Knockout round predictions</h3>
+                <button class="btn secondary" id="saveKnockout" data-i18n="saveKnockoutBtn">Save round predictions</button>
+              </div>
+              <div class="small-note" id="knockoutWindowNote"></div>
+              <div class="small-note" id="knockoutPolicyNote"></div>
+              <div class="table-scroll">
+                <table class="sticky-table">
+                  <thead>
+                    <tr>
+                      <th data-i18n="thDate">Date</th>
+                      <th data-i18n="thMatch">Match</th>
+                      <th class="center" data-i18n="thPrediction">Prediction</th>
+                    </tr>
+                  </thead>
+                  <tbody id="knockoutPredictionsBody"></tbody>
+                </table>
+              </div>
+            </details>
+            <details class="help-inline" id="knockoutRecordsPanel">
+              <summary data-i18n="knockoutDbRecordsTitle">Saved DB records</summary>
+              <div class="small-note" id="knockoutRecordsNote"></div>
+              <div class="table-scroll">
+                <table class="sticky-table">
+                  <thead>
+                    <tr>
+                      <th data-i18n="thStage">Stage</th>
+                      <th data-i18n="thMatch">Match</th>
+                      <th class="center" data-i18n="thPrediction">Prediction</th>
+                      <th data-i18n="thDate">Saved at</th>
+                    </tr>
+                  </thead>
+                  <tbody id="knockoutRecordsBody"></tbody>
+                </table>
+              </div>
+            </details>
+          </div>
+
+          <div class="cards" style="margin-top: 4px">
+            <div class="metric" style="background: #f8fafc; color: var(--text); border-color: #e2e8f0">
+              <span class="label" style="color: #475569" data-i18n="metricTotalPoints">Total points</span>
+              <span class="value" id="participantPoints">0</span>
+            </div>
+            <div class="metric" style="background: #f8fafc; color: var(--text); border-color: #e2e8f0">
+              <span class="label" style="color: #475569" data-i18n="metricExactHits">Exact hits</span>
+              <span class="value" id="participantExact">0</span>
+            </div>
+            <div class="metric" style="background: #f8fafc; color: var(--text); border-color: #e2e8f0">
+              <span class="label" style="color: #475569" data-i18n="metricOutcomeHits">Outcome hits</span>
+              <span class="value" id="participantOutcome">0</span>
+            </div>
+            <div class="metric" style="background: #f8fafc; color: var(--text); border-color: #e2e8f0">
+              <span class="label" style="color: #475569" data-i18n="metricScoredMatches">Scored matches</span>
+              <span class="value" id="participantPlayed">0</span>
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th data-i18n="thStage">Stage</th>
+                <th data-i18n="thMatch">Match</th>
+                <th class="center" data-i18n="thPrediction">Prediction</th>
+                <th class="center" data-i18n="thResult">Result</th>
+                <th class="center" data-i18n="thPoints">Points</th>
+              </tr>
+            </thead>
+            <tbody id="participantPredictionsBody"></tbody>
+          </table>
+        </section>
+      </div>
+    </div>
+
+    <script>
+      const I18N = {
+        en: {
+          appTitle: "World Cup Prediction Pool",
+          appSubtitle: "Live standings and participant predictions",
+          tabOverview: "Overview",
+          tabParticipant: "Participant view",
+          btnRefresh: "Refresh",
+          btnSync: "Sync scores now",
+          languageLabel: "Language",
+          metricParticipants: "Participants",
+          metricMatchesWithResult: "Matches with result",
+          metricCurrentLeader: "Current leader",
+          metricTopPoints: "Top points",
+          standingsTitle: "Standings",
+          timelineTitle: "Match timeline",
+          participantPredictionsTitle: "Participant predictions",
+          metricTotalPoints: "Total points",
+          metricExactHits: "Exact hits",
+          metricOutcomeHits: "Outcome hits",
+          metricScoredMatches: "Scored matches",
+          thParticipant: "Participant",
+          thPts: "Pts",
+          thExact: "Exact",
+          thOutcome: "Outcome",
+          thDate: "Date",
+          thLocalTime: "Local time",
+          thMatch: "Match",
+          thScore: "Score",
+          thStatus: "Status",
+          thStage: "Stage",
+          thPrediction: "Prediction",
+          thResult: "Result",
+          thPoints: "Points",
+          statusFinished: "Finished",
+          statusLive: "Live",
+          statusScheduled: "Scheduled",
+          statusUnknown: "Unknown",
+          noTimelineGames: "No timeline games yet. Run a score sync first.",
+          updatedAt: "Updated {time}",
+          viewingParticipant: "Viewing {name}",
+          refreshing: "Refreshing...",
+          syncingScores: "Syncing scores...",
+          tieBreakerTitle: "Tie-break rules",
+          tieBreakerBody: "Sort by points, then exact hits, then outcome hits.",
+          filterAll: "All",
+          filterFinished: "Finished",
+          filterLive: "Live",
+          filterUpcoming: "Upcoming",
+          participantSearchPlaceholder: "Search participant",
+          miniRank: "Rank",
+          miniTotal: "Total",
+          miniExact: "Exact",
+          miniBestMatch: "Best match",
+          podiumGold: "1st place",
+          podiumSilver: "2nd place",
+          podiumBronze: "3rd place",
+          syncMeta: "Last sync: {last} • Next auto-sync: {next}",
+          noSyncYet: "No sync yet",
+          nextSyncUnknown: "unknown",
+          knockoutEditorTitle: "Knockout round predictions",
+          saveKnockoutBtn: "Submit round predictions",
+          knockoutBannerOpen: "{round} is open for predictions now. Closes at {close}.",
+          knockoutBannerSoon: "{round} opens in less than 24h at {open}.",
+          knockoutWindowOpenNote: "Editing window open until {close}.",
+          knockoutWindowClosedNote: "This round is closed. Next opening: {open}.",
+          knockoutWindowNoRound: "Knockout schedule is not ready yet.",
+          knockoutDbRecordsTitle: "Saved DB records",
+          knockoutDbRecordsEmpty: "No saved knockout records yet.",
+          knockoutDbRecordsLocks: "{count} lock(s) stored.",
+          knockoutDbRecordsSaved: "{count} saved prediction row(s).",
+          knockoutTestModeNote: "Test participant mode: this bracket can be edited and re-submitted.",
+          loadTestParticipantBtn: "Load test participant",
+          knockoutLockedNote: "This round was already submitted on {time}. Changes are disabled.",
+          knockoutRequiresAllNote: "You must enter all match scores before submitting. After submit, no changes are allowed.",
+          knockoutMissingValues: "Complete all score boxes before submitting.",
+          knockoutSelectParticipantFirst: "Select your participant name first.",
+          round_LAST_32: "Round of 32",
+          round_LAST_16: "Round of 16",
+          round_QUARTER_FINALS: "Quarter-finals",
+          round_SEMI_FINALS: "Semi-finals",
+          round_FINAL: "Final",
+          knockoutSaved: "Knockout predictions submitted. This round is now locked.",
+          openBracketBtn: "Open bracket predictions",
+          knockoutEditorToggle: "Show/hide knockout prediction editor",
+          identityPromptTitle: "Select your participant name",
+          identityPromptBody: "Choose your name so your predictions are linked correctly.",
+          identityPromptWarning: "Important: after submitting this round, you will not be able to edit it.",
+          identityContinueBtn: "Continue",
+          identityCancelBtn: "Cancel",
+        },
+        es: {
+          appTitle: "Quiniela del Mundial",
+          appSubtitle: "Tabla en vivo y predicciones por participante",
+          tabOverview: "Resumen",
+          tabParticipant: "Participante",
+          btnRefresh: "Actualizar",
+          btnSync: "Sincronizar marcadores",
+          languageLabel: "Idioma",
+          metricParticipants: "Participantes",
+          metricMatchesWithResult: "Partidos con resultado",
+          metricCurrentLeader: "Líder actual",
+          metricTopPoints: "Puntos máximos",
+          standingsTitle: "Tabla de posiciones",
+          timelineTitle: "Cronología de partidos",
+          participantPredictionsTitle: "Predicciones del participante",
+          metricTotalPoints: "Puntos totales",
+          metricExactHits: "Aciertos exactos",
+          metricOutcomeHits: "Aciertos de resultado",
+          metricScoredMatches: "Partidos evaluados",
+          thParticipant: "Participante",
+          thPts: "Pts",
+          thExact: "Exacto",
+          thOutcome: "Resultado",
+          thDate: "Fecha",
+          thLocalTime: "Hora local",
+          thMatch: "Partido",
+          thScore: "Marcador",
+          thStatus: "Estado",
+          thStage: "Grupo/Fase",
+          thPrediction: "Predicción",
+          thResult: "Resultado",
+          thPoints: "Puntos",
+          statusFinished: "Finalizado",
+          statusLive: "En vivo",
+          statusScheduled: "Programado",
+          statusUnknown: "Sin estado",
+          noTimelineGames: "Aún no hay partidos en la cronología. Ejecuta una sincronización.",
+          updatedAt: "Actualizado {time}",
+          viewingParticipant: "Viendo a {name}",
+          refreshing: "Actualizando...",
+          syncingScores: "Sincronizando marcadores...",
+          tieBreakerTitle: "Reglas de desempate",
+          tieBreakerBody: "Ordena por puntos, luego exactos y después aciertos de resultado.",
+          filterAll: "Todos",
+          filterFinished: "Finalizados",
+          filterLive: "En vivo",
+          filterUpcoming: "Próximos",
+          participantSearchPlaceholder: "Buscar participante",
+          miniRank: "Posición",
+          miniTotal: "Total",
+          miniExact: "Exactos",
+          miniBestMatch: "Mejor partido",
+          podiumGold: "1er lugar",
+          podiumSilver: "2do lugar",
+          podiumBronze: "3er lugar",
+          syncMeta: "Última sincronización: {last} • Próxima auto-sync: {next}",
+          noSyncYet: "Sin sincronización",
+          nextSyncUnknown: "desconocida",
+          knockoutEditorTitle: "Predicciones de fase eliminatoria",
+          saveKnockoutBtn: "Enviar predicciones de la ronda",
+          knockoutBannerOpen: "{round} está abierta para predicciones ahora. Cierra a las {close}.",
+          knockoutBannerSoon: "{round} abre en menos de 24h a las {open}.",
+          knockoutWindowOpenNote: "Ventana de edición abierta hasta las {close}.",
+          knockoutWindowClosedNote: "Esta ronda está cerrada. Próxima apertura: {open}.",
+          knockoutWindowNoRound: "El calendario eliminatorio aún no está listo.",
+          knockoutDbRecordsTitle: "Registros guardados en la DB",
+          knockoutDbRecordsEmpty: "Todavía no hay registros eliminatorios guardados.",
+          knockoutDbRecordsLocks: "{count} bloqueo(s) guardado(s).",
+          knockoutDbRecordsSaved: "{count} predicción(es) guardada(s).",
+          knockoutTestModeNote: "Modo de prueba: este bracket se puede editar y reenviar.",
+          loadTestParticipantBtn: "Cargar participante de prueba",
+          knockoutLockedNote: "Esta ronda ya fue enviada el {time}. Los cambios están deshabilitados.",
+          knockoutRequiresAllNote: "Debes ingresar todos los marcadores antes de enviar. Después del envío no se permiten cambios.",
+          knockoutMissingValues: "Completa todas las casillas de marcador antes de enviar.",
+          knockoutSelectParticipantFirst: "Primero selecciona tu nombre de participante.",
+          round_LAST_32: "Dieciseisavos",
+          round_LAST_16: "Octavos",
+          round_QUARTER_FINALS: "Cuartos de final",
+          round_SEMI_FINALS: "Semifinales",
+          round_FINAL: "Final",
+          knockoutSaved: "Predicciones eliminatorias enviadas. Esta ronda quedó bloqueada.",
+          openBracketBtn: "Abrir predicciones de eliminatoria",
+          knockoutEditorToggle: "Mostrar/ocultar editor de predicciones eliminatorias",
+          identityPromptTitle: "Selecciona tu nombre de participante",
+          identityPromptBody: "Elige tu nombre para vincular correctamente tus predicciones.",
+          identityPromptWarning: "Importante: después de enviar esta ronda, no podrás editarla.",
+          identityContinueBtn: "Continuar",
+          identityCancelBtn: "Cancelar",
+        },
+      };
+
+      const state = {
+        standings: [],
+        latestMatches: [],
+        participants: [],
+        selectedParticipantId: null,
+        demoParticipantId: null,
+        participantPredictions: [],
+        participantSummary: { totalPoints: 0, exact: 0, outcomes: 0, played: 0 },
+        locale: "en",
+        matchFilter: "all",
+        botCron: null,
+        botEnabled: true,
+        botIntervalMinutes: null,
+        lastSyncAt: null,
+        nextSyncAt: null,
+        highlightMatchIds: new Set(),
+        highlightParticipantIds: new Set(),
+        knockoutContext: null,
+        knockoutRecords: null,
+        testMode: /^\/test-participant\/?$/.test(window.location.pathname),
+      };
+
+      function detectPreferredLocale() {
+        const saved = localStorage.getItem("pool.locale");
+        if (saved === "en" || saved === "es") return saved;
+        return String(navigator.language || "en").toLowerCase().startsWith("es") ? "es" : "en";
+      }
+
+      function t(key, params = {}) {
+        const dict = I18N[state.locale] || I18N.en;
+        const fallback = I18N.en[key] || key;
+        let text = dict[key] || fallback;
+        Object.keys(params).forEach((param) => {
+          text = text.replace(`{${param}}`, String(params[param]));
+        });
+        return text;
+      }
+
+      function applyStaticTranslations() {
+        document.documentElement.lang = state.locale;
+        document.querySelectorAll("[data-i18n]").forEach((element) => {
+          element.textContent = t(element.dataset.i18n);
+        });
+        document.querySelectorAll("[data-i18n-placeholder]").forEach((element) => {
+          element.placeholder = t(element.dataset.i18nPlaceholder);
+        });
+      }
+
+      function setStatus(message) {
+        document.getElementById("status").textContent = message;
+      }
+
+      function setUpdatedStatus() {
+        setStatus(t("updatedAt", { time: new Date().toLocaleTimeString(state.locale) }));
+      }
+
+      function setView(view) {
+        const overview = document.getElementById("overviewView");
+        const participant = document.getElementById("participantView");
+        overview.classList.toggle("hidden", view !== "overview");
+        participant.classList.toggle("hidden", view !== "participant");
+        document.querySelectorAll(".tab").forEach((tab) => {
+          tab.classList.toggle("active", tab.dataset.view === view);
+        });
+        if (view === "overview") setUpdatedStatus();
+      }
+
+      function setLocale(locale, persist = true) {
+        const nextLocale = locale === "es" ? "es" : "en";
+        state.locale = nextLocale;
+        if (persist) localStorage.setItem("pool.locale", nextLocale);
+        document.getElementById("languageSelect").value = nextLocale;
+        applyStaticTranslations();
+        renderStandings(state.standings);
+        renderPodium(state.standings);
+        renderLatestMatches(state.latestMatches);
+        renderParticipantPredictions(state.participantPredictions);
+        renderParticipantSummary(state.participantSummary);
+        renderKnockoutBanner();
+        renderKnockoutEditor();
+        if (state.knockoutRecords) renderKnockoutRecords(state.knockoutRecords);
+        renderSyncMeta();
+        setUpdatedStatus();
+      }
+
+      async function getJson(url, options) {
+        const response = await fetch(url, options);
+        if (!response.ok) {
+          const data = await response.json().catch(() => ({}));
+          throw new Error(data.error || `Request failed: ${response.status}`);
+        }
+        return response.json();
+      }
+
+      function parseBotIntervalMinutes(cronExpr) {
+        const m = String(cronExpr || "").trim().match(/^\*\/(\d+)\s+\*\s+\*\s+\*\s+\*$/);
+        if (!m) return null;
+        const minutes = Number(m[1]);
+        return Number.isInteger(minutes) && minutes > 0 ? minutes : null;
+      }
+
+      function scheduleNextAutoSync() {
+        if (!state.botEnabled || !state.botIntervalMinutes) {
+          state.nextSyncAt = null;
+          return;
+        }
+        const now = Date.now();
+        const intervalMs = state.botIntervalMinutes * 60 * 1000;
+        const next = Math.ceil(now / intervalMs) * intervalMs;
+        state.nextSyncAt = new Date(next);
+      }
+
+      function renderSyncMeta() {
+        const el = document.getElementById("syncMeta");
+        const last = state.lastSyncAt
+          ? new Date(state.lastSyncAt).toLocaleTimeString(state.locale)
+          : t("noSyncYet");
+        const next = state.nextSyncAt
+          ? new Date(state.nextSyncAt).toLocaleTimeString(state.locale)
+          : t("nextSyncUnknown");
+        el.textContent = t("syncMeta", { last, next });
+      }
+
+      function startSyncCountdown() {
+        setInterval(() => {
+          if (state.nextSyncAt && Date.now() > state.nextSyncAt.getTime()) {
+            scheduleNextAutoSync();
+          }
+          renderSyncMeta();
+        }, 1000);
+      }
+
+      function localizeStage(stage) {
+        if (!stage) return "-";
+        const text = String(stage).trim();
+        if (/^(LAST_32|LAST_16|QUARTER_FINALS|SEMI_FINALS|FINAL)$/.test(text)) {
+          return getRoundLabel(text);
+        }
+        const groupFromSpanish = text.match(/^grupo\s+(.+)$/i);
+        const groupFromEnglish = text.match(/^group\s+(.+)$/i);
+        if (state.locale === "en") return groupFromSpanish ? `Group ${groupFromSpanish[1]}` : text;
+        return groupFromEnglish ? `Grupo ${groupFromEnglish[1]}` : text;
+      }
+
+      function normalizeTeamKey(name) {
+        return String(name || "")
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, "");
+      }
+
+      const TEAM_FLAG_CODES = {
+        alemania: "DE",
+        argentina: "AR",
+        arabiasaudita: "SA",
+        australia: "AU",
+        austria: "AT",
+        belgica: "BE",
+        belgium: "BE",
+        bosniah: "BA",
+        bosniaherzegovina: "BA",
+        brasil: "BR",
+        bolivia: "BO",
+        caboverde: "CV",
+        canadá: "CA",
+        brazil: "BR",
+        canada: "CA",
+        canadla: "CA",
+        costa: "CR",
+        costarica: "CR",
+        costar: "CR",
+        costamarfil: "CI",
+        costademarfil: "CI",
+        coreasur: "KR",
+        coreadelsur: "KR",
+        corea: "KR",
+        chile: "CL",
+        china: "CN",
+        colombia: "CO",
+        croatia: "HR",
+        croacia: "HR",
+        curacao: "CW",
+        chequia: "CZ",
+        czechia: "CZ",
+        dinamarca: "DK",
+        denmark: "DK",
+        emiratosarabesunidos: "AE",
+        ecuador: "EC",
+        egypt: "EG",
+        egipto: "EG",
+        escocia: "GB",
+        espana: "ES",
+        england: "GB",
+        estadosunidos: "US",
+        finlandia: "FI",
+        francia: "FR",
+        gabon: "GA",
+        grecia: "GR",
+        korearepublic: "KR",
+        france: "FR",
+        germany: "DE",
+        guatemala: "GT",
+        honduras: "HN",
+        irlanda: "IE",
+        ghana: "GH",
+        greece: "GR",
+        haiti: "HT",
+        honduras: "HN",
+        hungary: "HU",
+        iran: "IR",
+        irak: "IQ",
+        iraq: "IQ",
+        italy: "IT",
+        italia: "IT",
+        ivorycoast: "CI",
+        japon: "JP",
+        japan: "JP",
+        jordan: "JO",
+        jordania: "JO",
+        mexico: "MX",
+        morocco: "MA",
+        marruecos: "MA",
+        paisesbajos: "NL",
+        holanda: "NL",
+        netherlands: "NL",
+        nuevazelanda: "NZ",
+        nzelanda: "NZ",
+        newzealand: "NZ",
+        norway: "NO",
+        noruega: "NO",
+        paraguay: "PY",
+        peru: "PE",
+        panama: "PA",
+        poland: "PL",
+        polonia: "PL",
+        portugal: "PT",
+        qatar: "QA",
+        repcongo: "CD",
+        saudiarabia: "SA",
+        scotland: "GB",
+        suecia: "SE",
+        senegal: "SN",
+        southafrica: "ZA",
+        southkorea: "KR",
+        sudafrica: "ZA",
+        sudcorea: "KR",
+        spain: "ES",
+        tunez: "TN",
+        suiza: "CH",
+        sweden: "SE",
+        switzerland: "CH",
+        tunisia: "TN",
+        curazao: "CW",
+        turquia: "TR",
+        turkiye: "TR",
+        unitedstates: "US",
+        usa: "US",
+        uruguay: "UY",
+        algeria: "DZ",
+        argelia: "DZ",
+        bosniaandherzegovina: "BA",
+        capeverdeislands: "CV",
+        capeverde: "CV",
+        cotedivoire: "CI",
+        congodr: "CD",
+        drcongo: "CD",
+        congodemocraticrepublic: "CD",
+        inglaterra: "GB",
+        panama: "PA",
+        ghana: "GH",
+        saudiarabia: "SA",
+        republicacheca: "CZ",
+        republicadominicana: "DO",
+        republicairlanda: "IE",
+        republicademoldavia: "MD",
+        republicadelsalvador: "SV",
+        republicadelsur: "KR",
+        uzbekistan: "UZ",
+      };
+
+      const TEAM_DISPLAY_NAMES = {
+        alemania: "Germany",
+        arabiasaudita: "Saudi Arabia",
+        belgica: "Belgium",
+        bosniah: "Bosnia and Herzegovina",
+        bosniaherzegovina: "Bosnia and Herzegovina",
+        brasil: "Brazil",
+        caboverde: "Cape Verde",
+        canadla: "Canada",
+        chequia: "Czechia",
+        corea: "South Korea",
+        coreadelsur: "South Korea",
+        coreasur: "South Korea",
+        costademarfil: "Ivory Coast",
+        costamarfil: "Ivory Coast",
+        croacia: "Croatia",
+        curacao: "Curacao",
+        curazao: "Curacao",
+        czechia: "Czechia",
+        egypt: "Egypt",
+        egipto: "Egypt",
+        espana: "Spain",
+        suecia: "Sweden",
+        tunez: "Tunisia",
+        espana: "Spain",
+        francia: "France",
+        ghana: "Ghana",
+        haiti: "Haiti",
+        holanda: "Netherlands",
+        irak: "Iraq",
+        irak: "Iraq",
+        iraq: "Iraq",
+        italia: "Italy",
+        japon: "Japan",
+        jordania: "Jordan",
+        marruecos: "Morocco",
+        mexico: "Mexico",
+        netherlands: "Netherlands",
+        nzelanda: "New Zealand",
+        nzelanda: "New Zealand",
+        nuevazelanda: "New Zealand",
+        panama: "Panama",
+        polonia: "Poland",
+        repcongo: "DR Congo",
+        republicacheca: "Czechia",
+        republicadominicana: "Dominican Republic",
+        republicairlanda: "Ireland",
+        republicademoldavia: "Moldova",
+        republicadelsalvador: "El Salvador",
+        republicadelsur: "South Korea",
+        suecia: "Sweden",
+        suiza: "Switzerland",
+        tunez: "Tunisia",
+        tunisia: "Tunisia",
+        uruguay: "Uruguay",
+      };
+
+      function teamLabel(name) {
+        const team = String(name || "").trim();
+        if (!team || team === "TBD") return team || "-";
+        const key = normalizeTeamKey(team);
+        const code = TEAM_FLAG_CODES[key];
+        const displayName = TEAM_DISPLAY_NAMES[key] || team;
+        return code
+          ? `<span class="team-with-flag"><span class="flag-icon"><img src="${flagSrc(code)}" alt="${code.toLowerCase()}" loading="lazy" referrerpolicy="no-referrer" /></span><span>${displayName}</span></span>`
+          : displayName;
+      }
+
+      function flagSrc(code) {
+        return `https://flagcdn.com/w20/${String(code || "").toLowerCase()}.png`;
+      }
+
+      function formatDateTime(value) {
+        const d = value ? new Date(value) : null;
+        if (!d || Number.isNaN(d.getTime())) return "-";
+        return d.toLocaleString(state.locale, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+      }
+
+      function getRoundLabel(roundCode) {
+        return t(`round_${roundCode}`) || roundCode || "-";
+      }
+
+      function statusPill(status) {
+        const normalized = String(status || "scheduled").toLowerCase();
+        if (normalized.includes("finish")) return "finished";
+        if (normalized.includes("live") || normalized.includes("progress")) return "live";
+        return "scheduled";
+      }
+
+      function statusLabel(status) {
+        const cls = statusPill(status);
+        if (cls === "finished") return t("statusFinished");
+        if (cls === "live") return t("statusLive");
+        if (cls === "scheduled") return t("statusScheduled");
+        return t("statusUnknown");
+      }
+
+      function getFilteredMatches(rows) {
+        if (state.matchFilter === "all") return rows;
+        return rows.filter((row) => statusPill(row.status) === state.matchFilter);
+      }
+
+      function renderStandings(rows) {
+        const body = document.getElementById("standingsBody");
+        body.innerHTML = rows
+          .map((row, i) => {
+            const h = state.highlightParticipantIds.has(row.participantId) ? "recent-update" : "";
+            return `
+              <tr class="standings-row ${h}" data-participant-id="${row.participantId}">
+                <td>${i + 1}</td>
+                <td>${row.participant}</td>
+                <td class="center"><strong>${row.points}</strong></td>
+                <td class="center">${row.exact}</td>
+                <td class="center">${row.outcomes}</td>
+              </tr>
+            `;
+          })
+          .join("");
+      }
+
+      function initials(name) {
+        return String(name || "")
+          .split(" ")
+          .filter(Boolean)
+          .slice(0, 2)
+          .map((p) => p[0].toUpperCase())
+          .join("");
+      }
+
+      function renderPodium(standings) {
+        const top = standings.slice(0, 3);
+        const labels = ["podiumGold", "podiumSilver", "podiumBronze"];
+        const container = document.getElementById("podium");
+        container.innerHTML = top
+          .map((row, idx) => {
+            return `
+              <div class="podium-card rank-${idx + 1}">
+                <div class="podium-rank">${t(labels[idx])}</div>
+                <div class="podium-name">${initials(row.participant)} · ${row.participant}</div>
+                <div class="podium-points">${row.points} pts</div>
+              </div>
+            `;
+          })
+          .join("");
+      }
+
+      function renderLatestMatches(rows) {
+        const filtered = getFilteredMatches(rows);
+        const tableBody = document.getElementById("matchesBody");
+        const cards = document.getElementById("timelineCards");
+        if (!filtered.length) {
+          const empty = `<tr><td colspan="5" style="text-align:center; color:#64748b;">${t("noTimelineGames")}</td></tr>`;
+          tableBody.innerHTML = empty;
+          cards.innerHTML = `<div class="timeline-card">${t("noTimelineGames")}</div>`;
+          return;
+        }
+
+        tableBody.innerHTML = filtered
+          .map((row) => {
+            const cls = statusPill(row.status);
+            const label = statusLabel(row.status);
+            const kickoff = row.kickoffUtc ? new Date(row.kickoffUtc) : null;
+            const dateText = kickoff ? kickoff.toLocaleDateString(state.locale, { month: "short", day: "numeric" }) : "-";
+            const timeText = kickoff
+              ? kickoff.toLocaleTimeString(state.locale, { hour: "2-digit", minute: "2-digit", timeZoneName: "short" })
+              : "-";
+            const score = Number.isInteger(row.homeScore) && Number.isInteger(row.awayScore) ? `${row.homeScore} - ${row.awayScore}` : "-";
+            const highlight = state.highlightMatchIds.has(row.id) ? "recent-update" : "";
+            return `
+              <tr class="${highlight}">
+                <td>${dateText}</td>
+                <td>${timeText}</td>
+                <td>${teamLabel(row.homeTeam)} vs ${teamLabel(row.awayTeam)}</td>
+                <td class="center">${score}</td>
+                <td><span class="pill ${cls}">${label}</span></td>
+              </tr>
+            `;
+          })
+          .join("");
+
+        cards.innerHTML = filtered
+          .map((row) => {
+            const cls = statusPill(row.status);
+            const label = statusLabel(row.status);
+            const kickoff = row.kickoffUtc ? new Date(row.kickoffUtc) : null;
+            const dateText = kickoff ? kickoff.toLocaleDateString(state.locale, { month: "short", day: "numeric" }) : "-";
+            const timeText = kickoff ? kickoff.toLocaleTimeString(state.locale, { hour: "2-digit", minute: "2-digit" }) : "-";
+            const score = Number.isInteger(row.homeScore) && Number.isInteger(row.awayScore) ? `${row.homeScore} - ${row.awayScore}` : "-";
+            const highlight = state.highlightMatchIds.has(row.id) ? "recent-update" : "";
+            return `
+              <div class="timeline-card ${highlight}">
+                <div><strong>${teamLabel(row.homeTeam)} vs ${teamLabel(row.awayTeam)}</strong></div>
+                <div>${dateText} • ${timeText}</div>
+                <div>${t("thScore")}: ${score}</div>
+                <div><span class="pill ${cls}">${label}</span></div>
+              </div>
+            `;
+          })
+          .join("");
+      }
+
+      function renderOverviewMetrics() {
+        const leader = state.standings[0];
+        const finished = state.latestMatches.filter((m) => Number.isInteger(m.homeScore) && Number.isInteger(m.awayScore)).length;
+        document.getElementById("metricParticipants").textContent = String(state.standings.length);
+        document.getElementById("metricFinished").textContent = String(finished);
+        document.getElementById("metricLeader").textContent = leader ? leader.participant : "-";
+        document.getElementById("metricTopPoints").textContent = leader ? String(leader.points) : "0";
+      }
+
+      function renderParticipantOptions() {
+        const search = String(document.getElementById("participantSearch").value || "").toLowerCase();
+        const filtered = state.participants.filter((p) => {
+          if (!state.testMode && Number(p.sourceCol) === -999) return false;
+          return p.name.toLowerCase().includes(search);
+        });
+        const select = document.getElementById("participantSelect");
+        select.innerHTML = filtered.map((p) => `<option value="${p.id}">${p.name}</option>`).join("");
+
+        if (!state.selectedParticipantId && filtered.length) state.selectedParticipantId = filtered[0].id;
+        const selectedExists = filtered.some((p) => p.id === state.selectedParticipantId);
+        if (!selectedExists && filtered.length) state.selectedParticipantId = filtered[0].id;
+        select.value = String(state.selectedParticipantId || "");
+      }
+
+      function renderIdentityParticipantOptions() {
+        const select = document.getElementById("participantIdentitySelect");
+        const options = state.participants
+          .filter((p) => state.testMode || Number(p.sourceCol) !== -999)
+          .map((p) => `<option value="${p.id}">${p.name}</option>`)
+          .join("");
+        select.innerHTML = options;
+        if (state.selectedParticipantId) {
+          select.value = String(state.selectedParticipantId);
+        }
+      }
+
+      function renderParticipantSummary(summary) {
+        state.participantSummary = summary || { totalPoints: 0, exact: 0, outcomes: 0, played: 0 };
+        document.getElementById("participantPoints").textContent = state.participantSummary.totalPoints || 0;
+        document.getElementById("participantExact").textContent = state.participantSummary.exact || 0;
+        document.getElementById("participantOutcome").textContent = state.participantSummary.outcomes || 0;
+        document.getElementById("participantPlayed").textContent = state.participantSummary.played || 0;
+
+        const rank = state.standings.findIndex((s) => s.participantId === state.selectedParticipantId);
+        document.getElementById("miniRank").textContent = rank >= 0 ? String(rank + 1) : "-";
+        document.getElementById("miniTotal").textContent = state.participantSummary.totalPoints || 0;
+        document.getElementById("miniExact").textContent = state.participantSummary.exact || 0;
+
+        const best = state.participantPredictions
+          .filter((p) => p.points !== null)
+          .sort((a, b) => b.points - a.points)[0];
+        document.getElementById("miniBestMatch").innerHTML = best
+          ? `${teamLabel(best.homeTeam)} ${best.predHome}-${best.predAway}`
+          : "-";
+      }
+
+      function pointsBadge(points) {
+        if (points === 5) return `<span class="points-badge points-5">+5</span>`;
+        if (points === 2) return `<span class="points-badge points-2">+2</span>`;
+        if (points === 0) return `<span class="points-badge points-0">0</span>`;
+        return "-";
+      }
+
+      function renderKnockoutBanner() {
+        const el = document.getElementById("knockoutBanner");
+        const textEl = document.getElementById("knockoutBannerText");
+        const actionEl = document.getElementById("openKnockoutFromBanner");
+        const banner = state.knockoutContext?.banner;
+        if (!banner) {
+          el.style.display = "none";
+          textEl.textContent = "";
+          actionEl.style.display = "none";
+          return;
+        }
+        const round = getRoundLabel(banner.roundCode);
+        const open = formatDateTime(banner.opensAt);
+        const close = formatDateTime(banner.closesAt);
+        textEl.textContent = banner.isOpen
+          ? t("knockoutBannerOpen", { round, close })
+          : t("knockoutBannerSoon", { round, open });
+        actionEl.style.display = "inline-block";
+        el.style.display = "block";
+      }
+
+      function renderKnockoutEditor() {
+        const tbody = document.getElementById("knockoutPredictionsBody");
+        const note = document.getElementById("knockoutWindowNote");
+        const policyNote = document.getElementById("knockoutPolicyNote");
+        const saveButton = document.getElementById("saveKnockout");
+        const panel = document.getElementById("knockoutEditorPanel");
+        const context = state.knockoutContext;
+        const visible = Boolean(state.testMode || context?.canEdit || context?.hasSubmitted);
+        if (panel) panel.style.display = visible ? "" : "none";
+        if (!visible) return;
+        policyNote.textContent = context?.isTestParticipant && !context?.hasSubmitted
+          ? t("knockoutTestModeNote")
+          : t("knockoutRequiresAllNote");
+        if (!context || !context.focusRound) {
+          note.textContent = t("knockoutWindowNoRound");
+          tbody.innerHTML = `<tr><td colspan="3">${t("knockoutWindowNoRound")}</td></tr>`;
+          saveButton.disabled = true;
+          return;
+        }
+
+        const closeWindow = context.windows.find((w) => w.roundCode === context.focusRound);
+        if (context.isTestParticipant && !context.hasSubmitted) {
+          note.textContent = t("knockoutTestModeNote");
+        } else if (context.hasSubmitted && context.lockedAt) {
+          note.textContent = t("knockoutLockedNote", { time: formatDateTime(context.lockedAt) });
+        } else if (context.canEdit && closeWindow) {
+          note.textContent = t("knockoutWindowOpenNote", { close: formatDateTime(closeWindow.closeAt) });
+        } else if (closeWindow) {
+          note.textContent = t("knockoutWindowClosedNote", { open: formatDateTime(closeWindow.openAt) });
+        } else {
+          note.textContent = t("knockoutWindowNoRound");
+        }
+
+        const predictionMap = new Map((context.predictions || []).map((p) => [p.matchId, p]));
+        tbody.innerHTML = (context.matches || [])
+          .map((m) => {
+            const existing = predictionMap.get(m.id);
+            const kickoff = formatDateTime(m.kickoffUtc);
+            const homeTeam = m.homeTeam || "TBD";
+            const awayTeam = m.awayTeam || "TBD";
+            const disabled = context.canEdit && (context.isTestParticipant || (homeTeam !== "TBD" && awayTeam !== "TBD")) ? "" : "disabled";
+            const homeVal = existing ? existing.predHome : "";
+            const awayVal = existing ? existing.predAway : "";
+            return `
+              <tr>
+                <td>${kickoff}</td>
+                <td>${teamLabel(homeTeam)} vs ${teamLabel(awayTeam)}</td>
+                <td class="center">
+                  <input type="number" min="0" class="knockout-input" data-match-id="${m.id}" data-side="home" value="${homeVal}" ${disabled} />
+                  -
+                  <input type="number" min="0" class="knockout-input" data-match-id="${m.id}" data-side="away" value="${awayVal}" ${disabled} />
+                </td>
+              </tr>
+            `;
+          })
+          .join("");
+        saveButton.disabled = !context.canEdit;
+      }
+
+      function renderKnockoutRecords(recordsData) {
+        const panel = document.getElementById("knockoutRecordsPanel");
+        if (panel) panel.style.display = state.testMode ? "" : "none";
+        if (!state.testMode) return;
+        const body = document.getElementById("knockoutRecordsBody");
+        const note = document.getElementById("knockoutRecordsNote");
+        const rows = recordsData?.predictions || [];
+        if (!rows.length) {
+          body.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#64748b;">${t("knockoutDbRecordsEmpty")}</td></tr>`;
+          note.textContent = recordsData?.locks?.length
+            ? t("knockoutDbRecordsLocks", { count: recordsData.locks.length })
+            : t("knockoutDbRecordsEmpty");
+          return;
+        }
+        body.innerHTML = rows
+          .map((row) => `
+            <tr>
+              <td>${getRoundLabel(row.roundCode)}</td>
+              <td>${teamLabel(row.homeTeam)} vs ${teamLabel(row.awayTeam)}</td>
+              <td class="center">${row.predHome} - ${row.predAway}</td>
+              <td>${formatDateTime(row.submittedAt)}</td>
+            </tr>
+          `)
+          .join("");
+        const lock = recordsData?.locks?.[0];
+        note.textContent = lock
+          ? `${t("knockoutDbRecordsLocks", { count: recordsData.locks.length })} • ${t("knockoutLockedNote", { time: formatDateTime(lock.lockedAt) })}`
+          : t("knockoutDbRecordsSaved", { count: rows.length });
+      }
+
+      function renderParticipantPredictions(rows) {
+        const body = document.getElementById("participantPredictionsBody");
+        body.innerHTML = rows
+          .map((row) => {
+            const resultText = Number.isInteger(row.realHome) && Number.isInteger(row.realAway) ? `${row.realHome} - ${row.realAway}` : "-";
+            return `
+              <tr>
+                <td>${localizeStage(row.stage)}</td>
+                <td>${teamLabel(row.homeTeam)} vs ${teamLabel(row.awayTeam)}</td>
+                <td class="center">${row.predHome} - ${row.predAway}</td>
+                <td class="center">${resultText}</td>
+                <td class="center">${pointsBadge(row.points)}</td>
+              </tr>
+            `;
+          })
+          .join("");
+      }
+
+      async function loadParticipantPredictions() {
+        if (!state.selectedParticipantId) return;
+        const data = await getJson(`/api/participants/${state.selectedParticipantId}/predictions`);
+        state.participantPredictions = data.predictions || [];
+        renderParticipantSummary(data.summary || {});
+        renderParticipantPredictions(state.participantPredictions);
+      }
+
+      async function loadKnockoutContext() {
+        if (!state.selectedParticipantId) return;
+        const data = await getJson(`/api/knockout/context?participantId=${state.selectedParticipantId}`);
+        state.knockoutContext = data;
+        renderKnockoutBanner();
+        renderKnockoutEditor();
+      }
+
+      async function loadKnockoutRecords() {
+        if (!state.selectedParticipantId) return;
+        const data = await getJson(`/api/debug/knockout-records?participantId=${state.selectedParticipantId}`);
+        state.knockoutRecords = data;
+        renderKnockoutRecords(data);
+      }
+
+      function getParticipantNameById(participantId) {
+        const found = state.participants.find((p) => p.id === participantId);
+        return found ? found.name : "";
+      }
+
+      async function openParticipantView(participantId) {
+        state.selectedParticipantId = participantId;
+        renderParticipantOptions();
+        setView("participant");
+        await Promise.all([loadParticipantPredictions(), loadKnockoutContext(), loadKnockoutRecords()]);
+        const name = getParticipantNameById(participantId);
+        if (name) setStatus(t("viewingParticipant", { name }));
+      }
+
+      async function requestParticipantIdentity() {
+        if (!state.participants.length) return null;
+        const dialog = document.getElementById("participantIdentityDialog");
+        const select = document.getElementById("participantIdentitySelect");
+        if (!dialog || !dialog.showModal) {
+          return state.selectedParticipantId || state.participants[0].id;
+        }
+        renderIdentityParticipantOptions();
+        if (!select.value && state.participants.length) {
+          select.value = String(state.participants[0].id);
+        }
+        dialog.returnValue = "";
+        dialog.showModal();
+        const decision = await new Promise((resolve) => {
+          dialog.addEventListener("close", () => resolve(dialog.returnValue), { once: true });
+        });
+        if (decision !== "confirm") return null;
+        const participantId = Number(select.value);
+        return Number.isInteger(participantId) ? participantId : null;
+      }
+
+      function clearHighlightsSoon() {
+        if (!state.highlightMatchIds.size && !state.highlightParticipantIds.size) return;
+        setTimeout(() => {
+          state.highlightMatchIds = new Set();
+          state.highlightParticipantIds = new Set();
+          renderStandings(state.standings);
+          renderLatestMatches(state.latestMatches);
+        }, 4500);
+      }
+
+      async function refreshOverview({ detectChanges = true } = {}) {
+        const previousMatches = state.latestMatches;
+        const previousStandings = state.standings;
+        const [standingsRes, matchesRes] = await Promise.all([
+          getJson(`/api/standings${state.testMode ? "?includeTest=1" : ""}`),
+          getJson("/api/matches/latest?limit=300"),
+        ]);
+
+        state.standings = standingsRes.standings || [];
+        state.latestMatches = matchesRes.matches || [];
+
+        const updatedAtValues = state.latestMatches
+          .map((m) => m.updatedAt)
+          .filter(Boolean)
+          .map((v) => Date.parse(v))
+          .filter((v) => Number.isFinite(v));
+        state.lastSyncAt = updatedAtValues.length ? new Date(Math.max(...updatedAtValues)) : null;
+
+        if (detectChanges) {
+          const prevMap = new Map(previousMatches.map((m) => [m.id, `${m.homeScore}:${m.awayScore}:${m.status}`]));
+          const nextMap = new Map(state.latestMatches.map((m) => [m.id, `${m.homeScore}:${m.awayScore}:${m.status}`]));
+          state.highlightMatchIds = new Set(
+            state.latestMatches.filter((m) => prevMap.get(m.id) && prevMap.get(m.id) !== nextMap.get(m.id)).map((m) => m.id)
+          );
+
+          const prevPoints = new Map(previousStandings.map((s) => [s.participantId, s.points]));
+          state.highlightParticipantIds = new Set(
+            state.standings.filter((s) => prevPoints.has(s.participantId) && prevPoints.get(s.participantId) !== s.points).map((s) => s.participantId)
+          );
+          clearHighlightsSoon();
+        }
+
+        renderStandings(state.standings);
+        renderPodium(state.standings);
+        renderLatestMatches(state.latestMatches);
+        renderOverviewMetrics();
+        renderSyncMeta();
+      }
+
+      async function refreshAll(options = {}) {
+        const participantsRes = await getJson("/api/participants");
+        state.participants = (participantsRes.participants || []).filter((p) => state.testMode || Number(p.sourceCol) !== -999);
+        if (!state.selectedParticipantId && state.participants.length) state.selectedParticipantId = state.participants[0].id;
+        state.demoParticipantId = state.testMode ? state.participants.find((p) => Number(p.sourceCol) === -999)?.id || null : null;
+        renderParticipantOptions();
+        renderIdentityParticipantOptions();
+        await Promise.all([refreshOverview(options), loadParticipantPredictions(), loadKnockoutContext(), loadKnockoutRecords()]);
+        setUpdatedStatus();
+      }
+
+      async function loadMeta() {
+        const meta = await getJson("/api/meta");
+        state.botEnabled = !!meta.botEnabled;
+        state.botCron = meta.botCron || null;
+        state.botIntervalMinutes = parseBotIntervalMinutes(state.botCron);
+        scheduleNextAutoSync();
+        renderSyncMeta();
+      }
+
+      document.querySelectorAll(".tab").forEach((tab) => {
+        tab.addEventListener("click", () => setView(tab.dataset.view));
+      });
+
+      document.querySelectorAll(".filter-chip").forEach((chip) => {
+        chip.addEventListener("click", () => {
+          state.matchFilter = chip.dataset.filter;
+          document.querySelectorAll(".filter-chip").forEach((c) => c.classList.toggle("active", c === chip));
+          renderLatestMatches(state.latestMatches);
+        });
+      });
+
+      document.getElementById("participantSearch").addEventListener("input", () => {
+        renderParticipantOptions();
+      });
+
+      document.getElementById("loadTestParticipant").addEventListener("click", async () => {
+        if (!state.demoParticipantId) {
+          setStatus(t("knockoutSelectParticipantFirst"));
+          return;
+        }
+        try {
+          await openParticipantView(state.demoParticipantId);
+        } catch (err) {
+          setStatus(err.message);
+        }
+      });
+
+      document.getElementById("loadTestParticipant").style.display = state.testMode ? "" : "none";
+      document.getElementById("knockoutRecordsPanel").style.display = state.testMode ? "" : "none";
+
+      document.getElementById("participantSelect").addEventListener("change", async (event) => {
+        state.selectedParticipantId = Number(event.target.value);
+        try {
+          setView("participant");
+          await Promise.all([loadParticipantPredictions(), loadKnockoutContext(), loadKnockoutRecords()]);
+          setStatus(t("viewingParticipant", { name: event.target.options[event.target.selectedIndex].text }));
+        } catch (err) {
+          setStatus(err.message);
+        }
+      });
+
+      document.getElementById("standingsBody").addEventListener("click", async (event) => {
+        const row = event.target.closest("tr[data-participant-id]");
+        if (!row) return;
+        const participantId = Number(row.dataset.participantId);
+        if (!Number.isInteger(participantId)) return;
+        try {
+          await openParticipantView(participantId);
+        } catch (err) {
+          setStatus(err.message);
+        }
+      });
+
+      document.getElementById("languageSelect").addEventListener("change", (event) => {
+        setLocale(event.target.value);
+      });
+
+      document.getElementById("refresh").addEventListener("click", async () => {
+        try {
+          setStatus(t("refreshing"));
+          await refreshAll();
+        } catch (err) {
+          setStatus(err.message);
+        }
+      });
+
+      document.getElementById("sync").addEventListener("click", async () => {
+        try {
+          setStatus(t("syncingScores"));
+          await getJson("/api/scores/sync", { method: "POST" });
+          scheduleNextAutoSync();
+          await refreshAll({ detectChanges: true });
+        } catch (err) {
+          setStatus(err.message);
+        }
+      });
+
+      document.getElementById("saveKnockout").addEventListener("click", async () => {
+        const context = state.knockoutContext;
+        if (!context?.focusRound || !context.canEdit) return;
+        if (!state.selectedParticipantId) {
+          setStatus(t("knockoutSelectParticipantFirst"));
+          return;
+        }
+        try {
+          const payload = [];
+          const editableMatches = (context.matches || []).filter((m) => {
+            if (context.isTestParticipant) return true;
+            return m.homeTeam && m.awayTeam && m.homeTeam !== "TBD" && m.awayTeam !== "TBD";
+          });
+          for (const match of editableMatches) {
+            const matchId = Number(match.id);
+            const homeInput = document.querySelector(`#knockoutPredictionsBody input[data-side="home"][data-match-id="${matchId}"]`);
+            const awayInput = document.querySelector(`#knockoutPredictionsBody input[data-side="away"][data-match-id="${matchId}"]`);
+            if (!homeInput || !awayInput) continue;
+            const homeVal = homeInput.value === "" ? null : Number(homeInput.value);
+            const awayVal = awayInput.value === "" ? null : Number(awayInput.value);
+            if (!Number.isInteger(homeVal) || !Number.isInteger(awayVal) || homeVal < 0 || awayVal < 0) {
+              setStatus(t("knockoutMissingValues"));
+              return;
+            }
+            payload.push({ matchId, predHome: homeVal, predAway: awayVal });
+          }
+          if (!payload.length || payload.length !== editableMatches.length) {
+            setStatus(t("knockoutMissingValues"));
+            return;
+          }
+          await getJson("/api/knockout/predictions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              participantId: state.selectedParticipantId,
+              roundCode: context.focusRound,
+              predictions: payload,
+            }),
+          });
+          await Promise.all([loadKnockoutContext(), loadKnockoutRecords(), refreshOverview({ detectChanges: false })]);
+          const panel = document.getElementById("knockoutEditorPanel");
+          if (panel) panel.open = false;
+          setStatus(t("knockoutSaved"));
+        } catch (err) {
+          setStatus(err.message);
+        }
+      });
+
+      document.getElementById("openKnockoutFromBanner").addEventListener("click", async () => {
+        try {
+          const participantId = await requestParticipantIdentity();
+          if (!participantId) {
+            setStatus(t("knockoutSelectParticipantFirst"));
+            return;
+          }
+          await openParticipantView(participantId);
+          const panel = document.getElementById("knockoutEditorPanel");
+          if (panel) panel.open = true;
+          const editor = document.querySelector(".knockout-editor");
+          if (editor) editor.scrollIntoView({ behavior: "smooth", block: "start" });
+        } catch (err) {
+          setStatus(err.message);
+        }
+      });
+
+      setLocale(detectPreferredLocale(), false);
+      loadMeta()
+        .catch(() => {})
+        .finally(() => {
+          refreshAll({ detectChanges: false }).catch((err) => setStatus(err.message));
+          setInterval(() => refreshAll().catch((err) => setStatus(err.message)), 60000);
+          startSyncCountdown();
+        });
+    </script>
+  </body>
+</html>
