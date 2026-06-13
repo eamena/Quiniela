@@ -769,6 +769,14 @@
             />
             <select class="select light" id="participantSelect"></select>
             <button
+              class="btn primary"
+              id="loadParticipantBtn"
+              disabled
+              data-i18n="loadParticipantBtn"
+            >
+              View
+            </button>
+            <button
               class="btn secondary"
               id="loadTestParticipant"
               data-i18n="loadTestParticipantBtn"
@@ -1013,6 +1021,7 @@
           knockoutDbRecordsSaved: "{count} saved prediction row(s).",
           knockoutTestModeNote:
             "Test participant mode: this bracket can be edited and re-submitted.",
+          loadParticipantBtn: "View",
           loadTestParticipantBtn: "Load test participant",
           knockoutLockedNote:
             "This round was already submitted on {time}. Changes are disabled.",
@@ -1115,6 +1124,7 @@
           knockoutDbRecordsSaved: "{count} predicción(es) guardada(s).",
           knockoutTestModeNote:
             "Modo de prueba: este bracket se puede editar y reenviar.",
+          loadParticipantBtn: "Ver",
           loadTestParticipantBtn: "Cargar participante de prueba",
           knockoutLockedNote:
             "Esta ronda ya fue enviada el {time}. Los cambios están deshabilitados.",
@@ -1149,6 +1159,7 @@
         latestMatches: [],
         participants: [],
         selectedParticipantId: null,
+        pendingParticipantId: null,
         demoParticipantId: null,
         participantPredictions: [],
         participantSummary: {
@@ -1712,14 +1723,25 @@
           .map((p) => `<option value="${p.id}">${p.name}</option>`)
           .join("");
 
-        if (!state.selectedParticipantId && filtered.length)
-          state.selectedParticipantId = filtered[0].id;
-        const selectedExists = filtered.some(
-          (p) => p.id === state.selectedParticipantId,
+        // Keep the pending selection in sync with the filtered list
+        if (!state.pendingParticipantId && filtered.length)
+          state.pendingParticipantId = filtered[0].id;
+        const pendingExists = filtered.some(
+          (p) => p.id === state.pendingParticipantId,
         );
-        if (!selectedExists && filtered.length)
-          state.selectedParticipantId = filtered[0].id;
-        select.value = String(state.selectedParticipantId || "");
+        if (!pendingExists && filtered.length)
+          state.pendingParticipantId = filtered[0].id;
+        select.value = String(state.pendingParticipantId || "");
+
+        // Enable the View button only when a participant is available in the list
+        // and the selected value differs from what is currently loaded, OR nothing
+        // has been loaded yet.
+        const btn = document.getElementById("loadParticipantBtn");
+        const hasPending = filtered.length > 0;
+        const isDifferent =
+          state.pendingParticipantId !== state.selectedParticipantId;
+        btn.disabled =
+          !hasPending || (!isDifferent && state.selectedParticipantId !== null);
       }
 
       function renderIdentityParticipantOptions() {
@@ -2081,8 +2103,10 @@
         state.participants = (participantsRes.participants || []).filter(
           (p) => state.testMode || Number(p.sourceCol) !== -999,
         );
-        if (!state.selectedParticipantId && state.participants.length)
+        if (!state.selectedParticipantId && state.participants.length) {
           state.selectedParticipantId = state.participants[0].id;
+          state.pendingParticipantId = state.participants[0].id;
+        }
         state.demoParticipantId = state.testMode
           ? state.participants.find((p) => Number(p.sourceCol) === -999)?.id ||
             null
@@ -2148,8 +2172,23 @@
 
       document
         .getElementById("participantSelect")
-        .addEventListener("change", async (event) => {
-          state.selectedParticipantId = Number(event.target.value);
+        .addEventListener("change", (event) => {
+          // Only update the pending selection — data loads when View is clicked
+          state.pendingParticipantId = Number(event.target.value);
+          const btn = document.getElementById("loadParticipantBtn");
+          btn.disabled =
+            state.pendingParticipantId === state.selectedParticipantId;
+        });
+
+      document
+        .getElementById("loadParticipantBtn")
+        .addEventListener("click", async () => {
+          if (!state.pendingParticipantId) return;
+          const select = document.getElementById("participantSelect");
+          const selectedName = select.options[select.selectedIndex]?.text || "";
+          state.selectedParticipantId = state.pendingParticipantId;
+          const btn = document.getElementById("loadParticipantBtn");
+          btn.disabled = true;
           try {
             setView("participant");
             await Promise.all([
@@ -2157,11 +2196,7 @@
               loadKnockoutContext(),
               loadKnockoutRecords(),
             ]);
-            setStatus(
-              t("viewingParticipant", {
-                name: event.target.options[event.target.selectedIndex].text,
-              }),
-            );
+            setStatus(t("viewingParticipant", { name: selectedName }));
           } catch (err) {
             setStatus(err.message);
           }
