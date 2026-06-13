@@ -262,6 +262,15 @@
         white-space: nowrap;
       }
 
+      .participant-table {
+        min-width: 640px;
+      }
+
+      .participant-table th,
+      .participant-table td {
+        white-space: nowrap;
+      }
+
       .timeline-filters {
         display: inline-flex;
         gap: 6px;
@@ -543,6 +552,10 @@
           display: block;
           margin-top: 8px;
         }
+
+        .participant-table {
+          min-width: 560px;
+        }
       }
     </style>
   </head>
@@ -551,18 +564,38 @@
       <header class="hero">
         <div>
           <h1 data-i18n="appTitle">World Cup Prediction Pool</h1>
-          <div class="muted" data-i18n="appSubtitle">Live standings and participant predictions</div>
+          <div class="muted" data-i18n="appSubtitle">
+            Live standings and participant predictions
+          </div>
         </div>
       </header>
 
       <div class="toolbar">
         <div class="tabs">
-          <button class="tab active" data-view="overview" data-i18n="tabOverview">Overview</button>
-          <button class="tab" data-view="participant" data-i18n="tabParticipant">Participant view</button>
+          <button
+            class="tab active"
+            data-view="overview"
+            data-i18n="tabOverview"
+          >
+            Overview
+          </button>
+          <button
+            class="tab"
+            data-view="participant"
+            data-i18n="tabParticipant"
+          >
+            Participant view
+          </button>
         </div>
-        <button class="btn primary" id="refresh" data-i18n="btnRefresh">Refresh</button>
-        <button class="btn secondary" id="sync" data-i18n="btnSync">Sync scores now</button>
-        <label class="muted" for="languageSelect" data-i18n="languageLabel">Language</label>
+        <button class="btn primary" id="refresh" data-i18n="btnRefresh">
+          Refresh
+        </button>
+        <button class="btn secondary" id="sync" data-i18n="btnSync">
+          Sync scores now
+        </button>
+        <label class="muted" for="languageSelect" data-i18n="languageLabel"
+          >Language</label
+        >
         <select class="select lang-select" id="languageSelect">
           <option value="en">English</option>
           <option value="es">Español</option>
@@ -570,19 +603,51 @@
         <span class="sync-meta" id="syncMeta"></span>
         <span class="status" id="status"></span>
       </div>
-      <div class="knockout-banner" id="knockoutBanner" style="display:none">
+      <div class="knockout-banner" id="knockoutBanner" style="display: none">
         <span id="knockoutBannerText"></span>
-        <button class="btn secondary" id="openKnockoutFromBanner" data-i18n="openBracketBtn">Open bracket predictions</button>
+        <button
+          class="btn secondary"
+          id="openKnockoutFromBanner"
+          data-i18n="openBracketBtn"
+        >
+          Open bracket predictions
+        </button>
       </div>
       <dialog id="participantIdentityDialog" class="identity-dialog">
         <form method="dialog" class="identity-dialog-content">
-          <h3 style="margin:0 0 8px" data-i18n="identityPromptTitle">Select your participant name</h3>
-          <div class="small-note" style="margin-bottom:8px" data-i18n="identityPromptBody">Choose your name to link your bracket submission.</div>
+          <h3 style="margin: 0 0 8px" data-i18n="identityPromptTitle">
+            Select your participant name
+          </h3>
+          <div
+            class="small-note"
+            style="margin-bottom: 8px"
+            data-i18n="identityPromptBody"
+          >
+            Choose your name to link your bracket submission.
+          </div>
           <select class="select light" id="participantIdentitySelect"></select>
-          <div class="small-note" style="margin-top:10px" data-i18n="identityPromptWarning">Once submitted, predictions cannot be changed.</div>
+          <div
+            class="small-note"
+            style="margin-top: 10px"
+            data-i18n="identityPromptWarning"
+          >
+            Once submitted, predictions cannot be changed.
+          </div>
           <div class="identity-dialog-actions">
-            <button class="btn secondary" value="cancel" data-i18n="identityCancelBtn">Cancel</button>
-            <button class="btn primary" value="confirm" data-i18n="identityContinueBtn">Continue</button>
+            <button
+              class="btn secondary"
+              value="cancel"
+              data-i18n="identityCancelBtn"
+            >
+              Cancel
+            </button>
+            <button
+              class="btn primary"
+              value="confirm"
+              data-i18n="identityContinueBtn"
+            >
+              Continue
+            </button>
           </div>
         </form>
       </dialog>
@@ -591,15 +656,21 @@
         <div class="podium" id="podium"></div>
         <div class="cards">
           <div class="metric">
-            <span class="label" data-i18n="metricParticipants">Participants</span>
+            <span class="label" data-i18n="metricParticipants"
+              >Participants</span
+            >
             <span class="value" id="metricParticipants">0</span>
           </div>
           <div class="metric">
-            <span class="label" data-i18n="metricMatchesWithResult">Matches with result</span>
+            <span class="label" data-i18n="metricMatchesWithResult"
+              >Matches with result</span
+            >
             <span class="value" id="metricFinished">0</span>
           </div>
           <div class="metric">
-            <span class="label" data-i18n="metricCurrentLeader">Current leader</span>
+            <span class="label" data-i18n="metricCurrentLeader"
+              >Current leader</span
+            >
             <span class="value" id="metricLeader">-</span>
           </div>
           <div class="metric">
@@ -613,20 +684,22 @@
             <h2 data-i18n="standingsTitle">Standings</h2>
             <details class="help-inline">
               <summary data-i18n="tieBreakerTitle">Tie-break rules</summary>
-              <div data-i18n="tieBreakerBody">Sort by points, then exact hits, then outcome hits.</div>
+              <div data-i18n="tieBreakerBody">
+                Sort by points, then exact hits, then outcome hits.
+              </div>
             </details>
             <div class="table-scroll">
               <table class="sticky-table">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th data-i18n="thParticipant">Participant</th>
-                  <th class="center" data-i18n="thPts">Pts</th>
-                  <th class="center" data-i18n="thExact">Exact</th>
-                  <th class="center" data-i18n="thOutcome">Outcome</th>
-                </tr>
-              </thead>
-              <tbody id="standingsBody"></tbody>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th data-i18n="thParticipant">Participant</th>
+                    <th class="center" data-i18n="thPts">Pts</th>
+                    <th class="center" data-i18n="thExact">Exact</th>
+                    <th class="center" data-i18n="thOutcome">Outcome</th>
+                  </tr>
+                </thead>
+                <tbody id="standingsBody"></tbody>
               </table>
             </div>
           </section>
@@ -634,23 +707,47 @@
           <section class="panel">
             <h2 data-i18n="timelineTitle">Match timeline</h2>
             <div class="timeline-filters">
-              <button class="filter-chip active" data-filter="all" data-i18n="filterAll">All</button>
-              <button class="filter-chip" data-filter="finished" data-i18n="filterFinished">Finished</button>
-              <button class="filter-chip" data-filter="live" data-i18n="filterLive">Live</button>
-              <button class="filter-chip" data-filter="scheduled" data-i18n="filterUpcoming">Upcoming</button>
+              <button
+                class="filter-chip active"
+                data-filter="all"
+                data-i18n="filterAll"
+              >
+                All
+              </button>
+              <button
+                class="filter-chip"
+                data-filter="finished"
+                data-i18n="filterFinished"
+              >
+                Finished
+              </button>
+              <button
+                class="filter-chip"
+                data-filter="live"
+                data-i18n="filterLive"
+              >
+                Live
+              </button>
+              <button
+                class="filter-chip"
+                data-filter="scheduled"
+                data-i18n="filterUpcoming"
+              >
+                Upcoming
+              </button>
             </div>
             <div class="table-scroll">
               <table class="timeline-table sticky-table">
-              <thead>
-                <tr>
-                  <th data-i18n="thDate">Date</th>
-                  <th data-i18n="thLocalTime">Local time</th>
-                  <th data-i18n="thMatch">Match</th>
-                  <th class="center" data-i18n="thScore">Score</th>
-                  <th data-i18n="thStatus">Status</th>
-                </tr>
-              </thead>
-              <tbody id="matchesBody"></tbody>
+                <thead>
+                  <tr>
+                    <th data-i18n="thDate">Date</th>
+                    <th data-i18n="thLocalTime">Local time</th>
+                    <th data-i18n="thMatch">Match</th>
+                    <th class="center" data-i18n="thScore">Score</th>
+                    <th data-i18n="thStatus">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="matchesBody"></tbody>
               </table>
             </div>
             <div class="timeline-cards" id="timelineCards"></div>
@@ -660,26 +757,61 @@
 
       <div id="participantView" class="hidden">
         <section class="panel">
-          <h2 data-i18n="participantPredictionsTitle">Participant predictions</h2>
+          <h2 data-i18n="participantPredictionsTitle">
+            Participant predictions
+          </h2>
           <div class="toolbar participant-toolbar" style="margin-top: 0">
-            <input class="select light" id="participantSearch" data-i18n-placeholder="participantSearchPlaceholder" placeholder="Search participant" />
+            <input
+              class="select light"
+              id="participantSearch"
+              data-i18n-placeholder="participantSearchPlaceholder"
+              placeholder="Search participant"
+            />
             <select class="select light" id="participantSelect"></select>
-            <button class="btn secondary" id="loadTestParticipant" data-i18n="loadTestParticipantBtn">Load test participant</button>
+            <button
+              class="btn secondary"
+              id="loadTestParticipant"
+              data-i18n="loadTestParticipantBtn"
+            >
+              Load test participant
+            </button>
           </div>
 
           <div class="participant-mini">
             <div class="participant-mini-grid">
-              <div class="mini-item"><div class="k" data-i18n="miniRank">Rank</div><div class="v" id="miniRank">-</div></div>
-              <div class="mini-item"><div class="k" data-i18n="miniTotal">Total</div><div class="v" id="miniTotal">0</div></div>
-              <div class="mini-item"><div class="k" data-i18n="miniExact">Exact</div><div class="v" id="miniExact">0</div></div>
-              <div class="mini-item"><div class="k" data-i18n="miniBestMatch">Best match</div><div class="v" id="miniBestMatch">-</div></div>
+              <div class="mini-item">
+                <div class="k" data-i18n="miniRank">Rank</div>
+                <div class="v" id="miniRank">-</div>
+              </div>
+              <div class="mini-item">
+                <div class="k" data-i18n="miniTotal">Total</div>
+                <div class="v" id="miniTotal">0</div>
+              </div>
+              <div class="mini-item">
+                <div class="k" data-i18n="miniExact">Exact</div>
+                <div class="v" id="miniExact">0</div>
+              </div>
+              <div class="mini-item">
+                <div class="k" data-i18n="miniBestMatch">Best match</div>
+                <div class="v" id="miniBestMatch">-</div>
+              </div>
             </div>
 
             <details class="knockout-editor" id="knockoutEditorPanel" open>
-              <summary class="small-note" data-i18n="knockoutEditorToggle">Show/hide knockout prediction editor</summary>
+              <summary class="small-note" data-i18n="knockoutEditorToggle">
+                Show/hide knockout prediction editor
+              </summary>
               <div class="header">
-                <h3 style="margin:0" data-i18n="knockoutEditorTitle">Knockout round predictions</h3>
-                <button class="btn secondary" id="saveKnockout" data-i18n="saveKnockoutBtn">Save round predictions</button>
+                <h3 style="margin: 0" data-i18n="knockoutEditorTitle">
+                  Knockout round predictions
+                </h3>
+                <button
+                  class="btn secondary"
+                  id="saveKnockout"
+                  data-i18n="saveKnockoutBtn"
+                >
+                  Save round predictions
+                </button>
               </div>
               <div class="small-note" id="knockoutWindowNote"></div>
               <div class="small-note" id="knockoutPolicyNote"></div>
@@ -689,7 +821,9 @@
                     <tr>
                       <th data-i18n="thDate">Date</th>
                       <th data-i18n="thMatch">Match</th>
-                      <th class="center" data-i18n="thPrediction">Prediction</th>
+                      <th class="center" data-i18n="thPrediction">
+                        Prediction
+                      </th>
                     </tr>
                   </thead>
                   <tbody id="knockoutPredictionsBody"></tbody>
@@ -697,7 +831,9 @@
               </div>
             </details>
             <details class="help-inline" id="knockoutRecordsPanel">
-              <summary data-i18n="knockoutDbRecordsTitle">Saved DB records</summary>
+              <summary data-i18n="knockoutDbRecordsTitle">
+                Saved DB records
+              </summary>
               <div class="small-note" id="knockoutRecordsNote"></div>
               <div class="table-scroll">
                 <table class="sticky-table">
@@ -705,7 +841,9 @@
                     <tr>
                       <th data-i18n="thStage">Stage</th>
                       <th data-i18n="thMatch">Match</th>
-                      <th class="center" data-i18n="thPrediction">Prediction</th>
+                      <th class="center" data-i18n="thPrediction">
+                        Prediction
+                      </th>
                       <th data-i18n="thDate">Saved at</th>
                     </tr>
                   </thead>
@@ -716,36 +854,86 @@
           </div>
 
           <div class="cards" style="margin-top: 4px">
-            <div class="metric" style="background: #f8fafc; color: var(--text); border-color: #e2e8f0">
-              <span class="label" style="color: #475569" data-i18n="metricTotalPoints">Total points</span>
+            <div
+              class="metric"
+              style="
+                background: #f8fafc;
+                color: var(--text);
+                border-color: #e2e8f0;
+              "
+            >
+              <span
+                class="label"
+                style="color: #475569"
+                data-i18n="metricTotalPoints"
+                >Total points</span
+              >
               <span class="value" id="participantPoints">0</span>
             </div>
-            <div class="metric" style="background: #f8fafc; color: var(--text); border-color: #e2e8f0">
-              <span class="label" style="color: #475569" data-i18n="metricExactHits">Exact hits</span>
+            <div
+              class="metric"
+              style="
+                background: #f8fafc;
+                color: var(--text);
+                border-color: #e2e8f0;
+              "
+            >
+              <span
+                class="label"
+                style="color: #475569"
+                data-i18n="metricExactHits"
+                >Exact hits</span
+              >
               <span class="value" id="participantExact">0</span>
             </div>
-            <div class="metric" style="background: #f8fafc; color: var(--text); border-color: #e2e8f0">
-              <span class="label" style="color: #475569" data-i18n="metricOutcomeHits">Outcome hits</span>
+            <div
+              class="metric"
+              style="
+                background: #f8fafc;
+                color: var(--text);
+                border-color: #e2e8f0;
+              "
+            >
+              <span
+                class="label"
+                style="color: #475569"
+                data-i18n="metricOutcomeHits"
+                >Outcome hits</span
+              >
               <span class="value" id="participantOutcome">0</span>
             </div>
-            <div class="metric" style="background: #f8fafc; color: var(--text); border-color: #e2e8f0">
-              <span class="label" style="color: #475569" data-i18n="metricScoredMatches">Scored matches</span>
+            <div
+              class="metric"
+              style="
+                background: #f8fafc;
+                color: var(--text);
+                border-color: #e2e8f0;
+              "
+            >
+              <span
+                class="label"
+                style="color: #475569"
+                data-i18n="metricScoredMatches"
+                >Scored matches</span
+              >
               <span class="value" id="participantPlayed">0</span>
             </div>
           </div>
 
-          <table>
-            <thead>
-              <tr>
-                <th data-i18n="thStage">Stage</th>
-                <th data-i18n="thMatch">Match</th>
-                <th class="center" data-i18n="thPrediction">Prediction</th>
-                <th class="center" data-i18n="thResult">Result</th>
-                <th class="center" data-i18n="thPoints">Points</th>
-              </tr>
-            </thead>
-            <tbody id="participantPredictionsBody"></tbody>
-          </table>
+          <div class="table-scroll">
+            <table class="participant-table">
+              <thead>
+                <tr>
+                  <th data-i18n="thStage">Stage</th>
+                  <th data-i18n="thMatch">Match</th>
+                  <th class="center" data-i18n="thPrediction">Prediction</th>
+                  <th class="center" data-i18n="thResult">Result</th>
+                  <th class="center" data-i18n="thPoints">Points</th>
+                </tr>
+              </thead>
+              <tbody id="participantPredictionsBody"></tbody>
+            </table>
+          </div>
         </section>
       </div>
     </div>
@@ -812,19 +1000,24 @@
           nextSyncUnknown: "unknown",
           knockoutEditorTitle: "Knockout round predictions",
           saveKnockoutBtn: "Submit round predictions",
-          knockoutBannerOpen: "{round} is open for predictions now. Closes at {close}.",
+          knockoutBannerOpen:
+            "{round} is open for predictions now. Closes at {close}.",
           knockoutBannerSoon: "{round} opens in less than 24h at {open}.",
           knockoutWindowOpenNote: "Editing window open until {close}.",
-          knockoutWindowClosedNote: "This round is closed. Next opening: {open}.",
+          knockoutWindowClosedNote:
+            "This round is closed. Next opening: {open}.",
           knockoutWindowNoRound: "Knockout schedule is not ready yet.",
           knockoutDbRecordsTitle: "Saved DB records",
           knockoutDbRecordsEmpty: "No saved knockout records yet.",
           knockoutDbRecordsLocks: "{count} lock(s) stored.",
           knockoutDbRecordsSaved: "{count} saved prediction row(s).",
-          knockoutTestModeNote: "Test participant mode: this bracket can be edited and re-submitted.",
+          knockoutTestModeNote:
+            "Test participant mode: this bracket can be edited and re-submitted.",
           loadTestParticipantBtn: "Load test participant",
-          knockoutLockedNote: "This round was already submitted on {time}. Changes are disabled.",
-          knockoutRequiresAllNote: "You must enter all match scores before submitting. After submit, no changes are allowed.",
+          knockoutLockedNote:
+            "This round was already submitted on {time}. Changes are disabled.",
+          knockoutRequiresAllNote:
+            "You must enter all match scores before submitting. After submit, no changes are allowed.",
           knockoutMissingValues: "Complete all score boxes before submitting.",
           knockoutSelectParticipantFirst: "Select your participant name first.",
           round_LAST_32: "Round of 32",
@@ -832,12 +1025,15 @@
           round_QUARTER_FINALS: "Quarter-finals",
           round_SEMI_FINALS: "Semi-finals",
           round_FINAL: "Final",
-          knockoutSaved: "Knockout predictions submitted. This round is now locked.",
+          knockoutSaved:
+            "Knockout predictions submitted. This round is now locked.",
           openBracketBtn: "Open bracket predictions",
           knockoutEditorToggle: "Show/hide knockout prediction editor",
           identityPromptTitle: "Select your participant name",
-          identityPromptBody: "Choose your name so your predictions are linked correctly.",
-          identityPromptWarning: "Important: after submitting this round, you will not be able to edit it.",
+          identityPromptBody:
+            "Choose your name so your predictions are linked correctly.",
+          identityPromptWarning:
+            "Important: after submitting this round, you will not be able to edit it.",
           identityContinueBtn: "Continue",
           identityCancelBtn: "Cancel",
         },
@@ -877,13 +1073,15 @@
           statusLive: "En vivo",
           statusScheduled: "Programado",
           statusUnknown: "Sin estado",
-          noTimelineGames: "Aún no hay partidos en la cronología. Ejecuta una sincronización.",
+          noTimelineGames:
+            "Aún no hay partidos en la cronología. Ejecuta una sincronización.",
           updatedAt: "Actualizado {time}",
           viewingParticipant: "Viendo a {name}",
           refreshing: "Actualizando...",
           syncingScores: "Sincronizando marcadores...",
           tieBreakerTitle: "Reglas de desempate",
-          tieBreakerBody: "Ordena por puntos, luego exactos y después aciertos de resultado.",
+          tieBreakerBody:
+            "Ordena por puntos, luego exactos y después aciertos de resultado.",
           filterAll: "Todos",
           filterFinished: "Finalizados",
           filterLive: "En vivo",
@@ -901,32 +1099,46 @@
           nextSyncUnknown: "desconocida",
           knockoutEditorTitle: "Predicciones de fase eliminatoria",
           saveKnockoutBtn: "Enviar predicciones de la ronda",
-          knockoutBannerOpen: "{round} está abierta para predicciones ahora. Cierra a las {close}.",
+          knockoutBannerOpen:
+            "{round} está abierta para predicciones ahora. Cierra a las {close}.",
           knockoutBannerSoon: "{round} abre en menos de 24h a las {open}.",
-          knockoutWindowOpenNote: "Ventana de edición abierta hasta las {close}.",
-          knockoutWindowClosedNote: "Esta ronda está cerrada. Próxima apertura: {open}.",
-          knockoutWindowNoRound: "El calendario eliminatorio aún no está listo.",
+          knockoutWindowOpenNote:
+            "Ventana de edición abierta hasta las {close}.",
+          knockoutWindowClosedNote:
+            "Esta ronda está cerrada. Próxima apertura: {open}.",
+          knockoutWindowNoRound:
+            "El calendario eliminatorio aún no está listo.",
           knockoutDbRecordsTitle: "Registros guardados en la DB",
-          knockoutDbRecordsEmpty: "Todavía no hay registros eliminatorios guardados.",
+          knockoutDbRecordsEmpty:
+            "Todavía no hay registros eliminatorios guardados.",
           knockoutDbRecordsLocks: "{count} bloqueo(s) guardado(s).",
           knockoutDbRecordsSaved: "{count} predicción(es) guardada(s).",
-          knockoutTestModeNote: "Modo de prueba: este bracket se puede editar y reenviar.",
+          knockoutTestModeNote:
+            "Modo de prueba: este bracket se puede editar y reenviar.",
           loadTestParticipantBtn: "Cargar participante de prueba",
-          knockoutLockedNote: "Esta ronda ya fue enviada el {time}. Los cambios están deshabilitados.",
-          knockoutRequiresAllNote: "Debes ingresar todos los marcadores antes de enviar. Después del envío no se permiten cambios.",
-          knockoutMissingValues: "Completa todas las casillas de marcador antes de enviar.",
-          knockoutSelectParticipantFirst: "Primero selecciona tu nombre de participante.",
+          knockoutLockedNote:
+            "Esta ronda ya fue enviada el {time}. Los cambios están deshabilitados.",
+          knockoutRequiresAllNote:
+            "Debes ingresar todos los marcadores antes de enviar. Después del envío no se permiten cambios.",
+          knockoutMissingValues:
+            "Completa todas las casillas de marcador antes de enviar.",
+          knockoutSelectParticipantFirst:
+            "Primero selecciona tu nombre de participante.",
           round_LAST_32: "Dieciseisavos",
           round_LAST_16: "Octavos",
           round_QUARTER_FINALS: "Cuartos de final",
           round_SEMI_FINALS: "Semifinales",
           round_FINAL: "Final",
-          knockoutSaved: "Predicciones eliminatorias enviadas. Esta ronda quedó bloqueada.",
+          knockoutSaved:
+            "Predicciones eliminatorias enviadas. Esta ronda quedó bloqueada.",
           openBracketBtn: "Abrir predicciones de eliminatoria",
-          knockoutEditorToggle: "Mostrar/ocultar editor de predicciones eliminatorias",
+          knockoutEditorToggle:
+            "Mostrar/ocultar editor de predicciones eliminatorias",
           identityPromptTitle: "Selecciona tu nombre de participante",
-          identityPromptBody: "Elige tu nombre para vincular correctamente tus predicciones.",
-          identityPromptWarning: "Importante: después de enviar esta ronda, no podrás editarla.",
+          identityPromptBody:
+            "Elige tu nombre para vincular correctamente tus predicciones.",
+          identityPromptWarning:
+            "Importante: después de enviar esta ronda, no podrás editarla.",
           identityContinueBtn: "Continuar",
           identityCancelBtn: "Cancelar",
         },
@@ -939,7 +1151,12 @@
         selectedParticipantId: null,
         demoParticipantId: null,
         participantPredictions: [],
-        participantSummary: { totalPoints: 0, exact: 0, outcomes: 0, played: 0 },
+        participantSummary: {
+          totalPoints: 0,
+          exact: 0,
+          outcomes: 0,
+          played: 0,
+        },
         locale: "en",
         matchFilter: "all",
         botCron: null,
@@ -957,7 +1174,11 @@
       function detectPreferredLocale() {
         const saved = localStorage.getItem("pool.locale");
         if (saved === "en" || saved === "es") return saved;
-        return String(navigator.language || "en").toLowerCase().startsWith("es") ? "es" : "en";
+        return String(navigator.language || "en")
+          .toLowerCase()
+          .startsWith("es")
+          ? "es"
+          : "en";
       }
 
       function t(key, params = {}) {
@@ -975,9 +1196,11 @@
         document.querySelectorAll("[data-i18n]").forEach((element) => {
           element.textContent = t(element.dataset.i18n);
         });
-        document.querySelectorAll("[data-i18n-placeholder]").forEach((element) => {
-          element.placeholder = t(element.dataset.i18nPlaceholder);
-        });
+        document
+          .querySelectorAll("[data-i18n-placeholder]")
+          .forEach((element) => {
+            element.placeholder = t(element.dataset.i18nPlaceholder);
+          });
       }
 
       function setStatus(message) {
@@ -985,7 +1208,9 @@
       }
 
       function setUpdatedStatus() {
-        setStatus(t("updatedAt", { time: new Date().toLocaleTimeString(state.locale) }));
+        setStatus(
+          t("updatedAt", { time: new Date().toLocaleTimeString(state.locale) }),
+        );
       }
 
       function setView(view) {
@@ -1027,7 +1252,9 @@
       }
 
       function parseBotIntervalMinutes(cronExpr) {
-        const m = String(cronExpr || "").trim().match(/^\*\/(\d+)\s+\*\s+\*\s+\*\s+\*$/);
+        const m = String(cronExpr || "")
+          .trim()
+          .match(/^\*\/(\d+)\s+\*\s+\*\s+\*\s+\*$/);
         if (!m) return null;
         const minutes = Number(m[1]);
         return Number.isInteger(minutes) && minutes > 0 ? minutes : null;
@@ -1072,7 +1299,8 @@
         }
         const groupFromSpanish = text.match(/^grupo\s+(.+)$/i);
         const groupFromEnglish = text.match(/^group\s+(.+)$/i);
-        if (state.locale === "en") return groupFromSpanish ? `Group ${groupFromSpanish[1]}` : text;
+        if (state.locale === "en")
+          return groupFromSpanish ? `Group ${groupFromSpanish[1]}` : text;
         return groupFromEnglish ? `Grupo ${groupFromEnglish[1]}` : text;
       }
 
@@ -1288,7 +1516,12 @@
       function formatDateTime(value) {
         const d = value ? new Date(value) : null;
         if (!d || Number.isNaN(d.getTime())) return "-";
-        return d.toLocaleString(state.locale, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+        return d.toLocaleString(state.locale, {
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
       }
 
       function getRoundLabel(roundCode) {
@@ -1298,7 +1531,8 @@
       function statusPill(status) {
         const normalized = String(status || "scheduled").toLowerCase();
         if (normalized.includes("finish")) return "finished";
-        if (normalized.includes("live") || normalized.includes("progress")) return "live";
+        if (normalized.includes("live") || normalized.includes("progress"))
+          return "live";
         return "scheduled";
       }
 
@@ -1312,14 +1546,18 @@
 
       function getFilteredMatches(rows) {
         if (state.matchFilter === "all") return rows;
-        return rows.filter((row) => statusPill(row.status) === state.matchFilter);
+        return rows.filter(
+          (row) => statusPill(row.status) === state.matchFilter,
+        );
       }
 
       function renderStandings(rows) {
         const body = document.getElementById("standingsBody");
         body.innerHTML = rows
           .map((row, i) => {
-            const h = state.highlightParticipantIds.has(row.participantId) ? "recent-update" : "";
+            const h = state.highlightParticipantIds.has(row.participantId)
+              ? "recent-update"
+              : "";
             return `
               <tr class="standings-row ${h}" data-participant-id="${row.participantId}">
                 <td>${i + 1}</td>
@@ -1375,12 +1613,26 @@
             const cls = statusPill(row.status);
             const label = statusLabel(row.status);
             const kickoff = row.kickoffUtc ? new Date(row.kickoffUtc) : null;
-            const dateText = kickoff ? kickoff.toLocaleDateString(state.locale, { month: "short", day: "numeric" }) : "-";
-            const timeText = kickoff
-              ? kickoff.toLocaleTimeString(state.locale, { hour: "2-digit", minute: "2-digit", timeZoneName: "short" })
+            const dateText = kickoff
+              ? kickoff.toLocaleDateString(state.locale, {
+                  month: "short",
+                  day: "numeric",
+                })
               : "-";
-            const score = Number.isInteger(row.homeScore) && Number.isInteger(row.awayScore) ? `${row.homeScore} - ${row.awayScore}` : "-";
-            const highlight = state.highlightMatchIds.has(row.id) ? "recent-update" : "";
+            const timeText = kickoff
+              ? kickoff.toLocaleTimeString(state.locale, {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  timeZoneName: "short",
+                })
+              : "-";
+            const score =
+              Number.isInteger(row.homeScore) && Number.isInteger(row.awayScore)
+                ? `${row.homeScore} - ${row.awayScore}`
+                : "-";
+            const highlight = state.highlightMatchIds.has(row.id)
+              ? "recent-update"
+              : "";
             return `
               <tr class="${highlight}">
                 <td>${dateText}</td>
@@ -1398,10 +1650,25 @@
             const cls = statusPill(row.status);
             const label = statusLabel(row.status);
             const kickoff = row.kickoffUtc ? new Date(row.kickoffUtc) : null;
-            const dateText = kickoff ? kickoff.toLocaleDateString(state.locale, { month: "short", day: "numeric" }) : "-";
-            const timeText = kickoff ? kickoff.toLocaleTimeString(state.locale, { hour: "2-digit", minute: "2-digit" }) : "-";
-            const score = Number.isInteger(row.homeScore) && Number.isInteger(row.awayScore) ? `${row.homeScore} - ${row.awayScore}` : "-";
-            const highlight = state.highlightMatchIds.has(row.id) ? "recent-update" : "";
+            const dateText = kickoff
+              ? kickoff.toLocaleDateString(state.locale, {
+                  month: "short",
+                  day: "numeric",
+                })
+              : "-";
+            const timeText = kickoff
+              ? kickoff.toLocaleTimeString(state.locale, {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : "-";
+            const score =
+              Number.isInteger(row.homeScore) && Number.isInteger(row.awayScore)
+                ? `${row.homeScore} - ${row.awayScore}`
+                : "-";
+            const highlight = state.highlightMatchIds.has(row.id)
+              ? "recent-update"
+              : "";
             return `
               <div class="timeline-card ${highlight}">
                 <div><strong>${teamLabel(row.homeTeam)} vs ${teamLabel(row.awayTeam)}</strong></div>
@@ -1416,25 +1683,42 @@
 
       function renderOverviewMetrics() {
         const leader = state.standings[0];
-        const finished = state.latestMatches.filter((m) => Number.isInteger(m.homeScore) && Number.isInteger(m.awayScore)).length;
-        document.getElementById("metricParticipants").textContent = String(state.standings.length);
-        document.getElementById("metricFinished").textContent = String(finished);
-        document.getElementById("metricLeader").textContent = leader ? leader.participant : "-";
-        document.getElementById("metricTopPoints").textContent = leader ? String(leader.points) : "0";
+        const finished = state.latestMatches.filter(
+          (m) => Number.isInteger(m.homeScore) && Number.isInteger(m.awayScore),
+        ).length;
+        document.getElementById("metricParticipants").textContent = String(
+          state.standings.length,
+        );
+        document.getElementById("metricFinished").textContent =
+          String(finished);
+        document.getElementById("metricLeader").textContent = leader
+          ? leader.participant
+          : "-";
+        document.getElementById("metricTopPoints").textContent = leader
+          ? String(leader.points)
+          : "0";
       }
 
       function renderParticipantOptions() {
-        const search = String(document.getElementById("participantSearch").value || "").toLowerCase();
+        const search = String(
+          document.getElementById("participantSearch").value || "",
+        ).toLowerCase();
         const filtered = state.participants.filter((p) => {
           if (!state.testMode && Number(p.sourceCol) === -999) return false;
           return p.name.toLowerCase().includes(search);
         });
         const select = document.getElementById("participantSelect");
-        select.innerHTML = filtered.map((p) => `<option value="${p.id}">${p.name}</option>`).join("");
+        select.innerHTML = filtered
+          .map((p) => `<option value="${p.id}">${p.name}</option>`)
+          .join("");
 
-        if (!state.selectedParticipantId && filtered.length) state.selectedParticipantId = filtered[0].id;
-        const selectedExists = filtered.some((p) => p.id === state.selectedParticipantId);
-        if (!selectedExists && filtered.length) state.selectedParticipantId = filtered[0].id;
+        if (!state.selectedParticipantId && filtered.length)
+          state.selectedParticipantId = filtered[0].id;
+        const selectedExists = filtered.some(
+          (p) => p.id === state.selectedParticipantId,
+        );
+        if (!selectedExists && filtered.length)
+          state.selectedParticipantId = filtered[0].id;
         select.value = String(state.selectedParticipantId || "");
       }
 
@@ -1451,16 +1735,30 @@
       }
 
       function renderParticipantSummary(summary) {
-        state.participantSummary = summary || { totalPoints: 0, exact: 0, outcomes: 0, played: 0 };
-        document.getElementById("participantPoints").textContent = state.participantSummary.totalPoints || 0;
-        document.getElementById("participantExact").textContent = state.participantSummary.exact || 0;
-        document.getElementById("participantOutcome").textContent = state.participantSummary.outcomes || 0;
-        document.getElementById("participantPlayed").textContent = state.participantSummary.played || 0;
+        state.participantSummary = summary || {
+          totalPoints: 0,
+          exact: 0,
+          outcomes: 0,
+          played: 0,
+        };
+        document.getElementById("participantPoints").textContent =
+          state.participantSummary.totalPoints || 0;
+        document.getElementById("participantExact").textContent =
+          state.participantSummary.exact || 0;
+        document.getElementById("participantOutcome").textContent =
+          state.participantSummary.outcomes || 0;
+        document.getElementById("participantPlayed").textContent =
+          state.participantSummary.played || 0;
 
-        const rank = state.standings.findIndex((s) => s.participantId === state.selectedParticipantId);
-        document.getElementById("miniRank").textContent = rank >= 0 ? String(rank + 1) : "-";
-        document.getElementById("miniTotal").textContent = state.participantSummary.totalPoints || 0;
-        document.getElementById("miniExact").textContent = state.participantSummary.exact || 0;
+        const rank = state.standings.findIndex(
+          (s) => s.participantId === state.selectedParticipantId,
+        );
+        document.getElementById("miniRank").textContent =
+          rank >= 0 ? String(rank + 1) : "-";
+        document.getElementById("miniTotal").textContent =
+          state.participantSummary.totalPoints || 0;
+        document.getElementById("miniExact").textContent =
+          state.participantSummary.exact || 0;
 
         const best = state.participantPredictions
           .filter((p) => p.points !== null)
@@ -1471,8 +1769,10 @@
       }
 
       function pointsBadge(points) {
-        if (points === 5) return `<span class="points-badge points-5">+5</span>`;
-        if (points === 2) return `<span class="points-badge points-2">+2</span>`;
+        if (points === 5)
+          return `<span class="points-badge points-5">+5</span>`;
+        if (points === 2)
+          return `<span class="points-badge points-2">+2</span>`;
         if (points === 0) return `<span class="points-badge points-0">0</span>`;
         return "-";
       }
@@ -1505,12 +1805,15 @@
         const saveButton = document.getElementById("saveKnockout");
         const panel = document.getElementById("knockoutEditorPanel");
         const context = state.knockoutContext;
-        const visible = Boolean(state.testMode || context?.canEdit || context?.hasSubmitted);
+        const visible = Boolean(
+          state.testMode || context?.canEdit || context?.hasSubmitted,
+        );
         if (panel) panel.style.display = visible ? "" : "none";
         if (!visible) return;
-        policyNote.textContent = context?.isTestParticipant && !context?.hasSubmitted
-          ? t("knockoutTestModeNote")
-          : t("knockoutRequiresAllNote");
+        policyNote.textContent =
+          context?.isTestParticipant && !context?.hasSubmitted
+            ? t("knockoutTestModeNote")
+            : t("knockoutRequiresAllNote");
         if (!context || !context.focusRound) {
           note.textContent = t("knockoutWindowNoRound");
           tbody.innerHTML = `<tr><td colspan="3">${t("knockoutWindowNoRound")}</td></tr>`;
@@ -1518,27 +1821,42 @@
           return;
         }
 
-        const closeWindow = context.windows.find((w) => w.roundCode === context.focusRound);
+        const closeWindow = context.windows.find(
+          (w) => w.roundCode === context.focusRound,
+        );
         if (context.isTestParticipant && !context.hasSubmitted) {
           note.textContent = t("knockoutTestModeNote");
         } else if (context.hasSubmitted && context.lockedAt) {
-          note.textContent = t("knockoutLockedNote", { time: formatDateTime(context.lockedAt) });
+          note.textContent = t("knockoutLockedNote", {
+            time: formatDateTime(context.lockedAt),
+          });
         } else if (context.canEdit && closeWindow) {
-          note.textContent = t("knockoutWindowOpenNote", { close: formatDateTime(closeWindow.closeAt) });
+          note.textContent = t("knockoutWindowOpenNote", {
+            close: formatDateTime(closeWindow.closeAt),
+          });
         } else if (closeWindow) {
-          note.textContent = t("knockoutWindowClosedNote", { open: formatDateTime(closeWindow.openAt) });
+          note.textContent = t("knockoutWindowClosedNote", {
+            open: formatDateTime(closeWindow.openAt),
+          });
         } else {
           note.textContent = t("knockoutWindowNoRound");
         }
 
-        const predictionMap = new Map((context.predictions || []).map((p) => [p.matchId, p]));
+        const predictionMap = new Map(
+          (context.predictions || []).map((p) => [p.matchId, p]),
+        );
         tbody.innerHTML = (context.matches || [])
           .map((m) => {
             const existing = predictionMap.get(m.id);
             const kickoff = formatDateTime(m.kickoffUtc);
             const homeTeam = m.homeTeam || "TBD";
             const awayTeam = m.awayTeam || "TBD";
-            const disabled = context.canEdit && (context.isTestParticipant || (homeTeam !== "TBD" && awayTeam !== "TBD")) ? "" : "disabled";
+            const disabled =
+              context.canEdit &&
+              (context.isTestParticipant ||
+                (homeTeam !== "TBD" && awayTeam !== "TBD"))
+                ? ""
+                : "disabled";
             const homeVal = existing ? existing.predHome : "";
             const awayVal = existing ? existing.predAway : "";
             return `
@@ -1572,14 +1890,16 @@
           return;
         }
         body.innerHTML = rows
-          .map((row) => `
+          .map(
+            (row) => `
             <tr>
               <td>${getRoundLabel(row.roundCode)}</td>
               <td>${teamLabel(row.homeTeam)} vs ${teamLabel(row.awayTeam)}</td>
               <td class="center">${row.predHome} - ${row.predAway}</td>
               <td>${formatDateTime(row.submittedAt)}</td>
             </tr>
-          `)
+          `,
+          )
           .join("");
         const lock = recordsData?.locks?.[0];
         note.textContent = lock
@@ -1591,7 +1911,10 @@
         const body = document.getElementById("participantPredictionsBody");
         body.innerHTML = rows
           .map((row) => {
-            const resultText = Number.isInteger(row.realHome) && Number.isInteger(row.realAway) ? `${row.realHome} - ${row.realAway}` : "-";
+            const resultText =
+              Number.isInteger(row.realHome) && Number.isInteger(row.realAway)
+                ? `${row.realHome} - ${row.realAway}`
+                : "-";
             return `
               <tr>
                 <td>${localizeStage(row.stage)}</td>
@@ -1607,7 +1930,9 @@
 
       async function loadParticipantPredictions() {
         if (!state.selectedParticipantId) return;
-        const data = await getJson(`/api/participants/${state.selectedParticipantId}/predictions`);
+        const data = await getJson(
+          `/api/participants/${state.selectedParticipantId}/predictions`,
+        );
         state.participantPredictions = data.predictions || [];
         renderParticipantSummary(data.summary || {});
         renderParticipantPredictions(state.participantPredictions);
@@ -1615,7 +1940,9 @@
 
       async function loadKnockoutContext() {
         if (!state.selectedParticipantId) return;
-        const data = await getJson(`/api/knockout/context?participantId=${state.selectedParticipantId}`);
+        const data = await getJson(
+          `/api/knockout/context?participantId=${state.selectedParticipantId}`,
+        );
         state.knockoutContext = data;
         renderKnockoutBanner();
         renderKnockoutEditor();
@@ -1623,7 +1950,9 @@
 
       async function loadKnockoutRecords() {
         if (!state.selectedParticipantId) return;
-        const data = await getJson(`/api/debug/knockout-records?participantId=${state.selectedParticipantId}`);
+        const data = await getJson(
+          `/api/debug/knockout-records?participantId=${state.selectedParticipantId}`,
+        );
         state.knockoutRecords = data;
         renderKnockoutRecords(data);
       }
@@ -1637,7 +1966,11 @@
         state.selectedParticipantId = participantId;
         renderParticipantOptions();
         setView("participant");
-        await Promise.all([loadParticipantPredictions(), loadKnockoutContext(), loadKnockoutRecords()]);
+        await Promise.all([
+          loadParticipantPredictions(),
+          loadKnockoutContext(),
+          loadKnockoutRecords(),
+        ]);
         const name = getParticipantNameById(participantId);
         if (name) setStatus(t("viewingParticipant", { name }));
       }
@@ -1656,7 +1989,9 @@
         dialog.returnValue = "";
         dialog.showModal();
         const decision = await new Promise((resolve) => {
-          dialog.addEventListener("close", () => resolve(dialog.returnValue), { once: true });
+          dialog.addEventListener("close", () => resolve(dialog.returnValue), {
+            once: true,
+          });
         });
         if (decision !== "confirm") return null;
         const participantId = Number(select.value);
@@ -1664,7 +1999,11 @@
       }
 
       function clearHighlightsSoon() {
-        if (!state.highlightMatchIds.size && !state.highlightParticipantIds.size) return;
+        if (
+          !state.highlightMatchIds.size &&
+          !state.highlightParticipantIds.size
+        )
+          return;
         setTimeout(() => {
           state.highlightMatchIds = new Set();
           state.highlightParticipantIds = new Set();
@@ -1689,18 +2028,43 @@
           .filter(Boolean)
           .map((v) => Date.parse(v))
           .filter((v) => Number.isFinite(v));
-        state.lastSyncAt = updatedAtValues.length ? new Date(Math.max(...updatedAtValues)) : null;
+        state.lastSyncAt = updatedAtValues.length
+          ? new Date(Math.max(...updatedAtValues))
+          : null;
 
         if (detectChanges) {
-          const prevMap = new Map(previousMatches.map((m) => [m.id, `${m.homeScore}:${m.awayScore}:${m.status}`]));
-          const nextMap = new Map(state.latestMatches.map((m) => [m.id, `${m.homeScore}:${m.awayScore}:${m.status}`]));
+          const prevMap = new Map(
+            previousMatches.map((m) => [
+              m.id,
+              `${m.homeScore}:${m.awayScore}:${m.status}`,
+            ]),
+          );
+          const nextMap = new Map(
+            state.latestMatches.map((m) => [
+              m.id,
+              `${m.homeScore}:${m.awayScore}:${m.status}`,
+            ]),
+          );
           state.highlightMatchIds = new Set(
-            state.latestMatches.filter((m) => prevMap.get(m.id) && prevMap.get(m.id) !== nextMap.get(m.id)).map((m) => m.id)
+            state.latestMatches
+              .filter(
+                (m) =>
+                  prevMap.get(m.id) && prevMap.get(m.id) !== nextMap.get(m.id),
+              )
+              .map((m) => m.id),
           );
 
-          const prevPoints = new Map(previousStandings.map((s) => [s.participantId, s.points]));
+          const prevPoints = new Map(
+            previousStandings.map((s) => [s.participantId, s.points]),
+          );
           state.highlightParticipantIds = new Set(
-            state.standings.filter((s) => prevPoints.has(s.participantId) && prevPoints.get(s.participantId) !== s.points).map((s) => s.participantId)
+            state.standings
+              .filter(
+                (s) =>
+                  prevPoints.has(s.participantId) &&
+                  prevPoints.get(s.participantId) !== s.points,
+              )
+              .map((s) => s.participantId),
           );
           clearHighlightsSoon();
         }
@@ -1714,12 +2078,23 @@
 
       async function refreshAll(options = {}) {
         const participantsRes = await getJson("/api/participants");
-        state.participants = (participantsRes.participants || []).filter((p) => state.testMode || Number(p.sourceCol) !== -999);
-        if (!state.selectedParticipantId && state.participants.length) state.selectedParticipantId = state.participants[0].id;
-        state.demoParticipantId = state.testMode ? state.participants.find((p) => Number(p.sourceCol) === -999)?.id || null : null;
+        state.participants = (participantsRes.participants || []).filter(
+          (p) => state.testMode || Number(p.sourceCol) !== -999,
+        );
+        if (!state.selectedParticipantId && state.participants.length)
+          state.selectedParticipantId = state.participants[0].id;
+        state.demoParticipantId = state.testMode
+          ? state.participants.find((p) => Number(p.sourceCol) === -999)?.id ||
+            null
+          : null;
         renderParticipantOptions();
         renderIdentityParticipantOptions();
-        await Promise.all([refreshOverview(options), loadParticipantPredictions(), loadKnockoutContext(), loadKnockoutRecords()]);
+        await Promise.all([
+          refreshOverview(options),
+          loadParticipantPredictions(),
+          loadKnockoutContext(),
+          loadKnockoutRecords(),
+        ]);
         setUpdatedStatus();
       }
 
@@ -1739,56 +2114,78 @@
       document.querySelectorAll(".filter-chip").forEach((chip) => {
         chip.addEventListener("click", () => {
           state.matchFilter = chip.dataset.filter;
-          document.querySelectorAll(".filter-chip").forEach((c) => c.classList.toggle("active", c === chip));
+          document
+            .querySelectorAll(".filter-chip")
+            .forEach((c) => c.classList.toggle("active", c === chip));
           renderLatestMatches(state.latestMatches);
         });
       });
 
-      document.getElementById("participantSearch").addEventListener("input", () => {
-        renderParticipantOptions();
-      });
+      document
+        .getElementById("participantSearch")
+        .addEventListener("input", () => {
+          renderParticipantOptions();
+        });
 
-      document.getElementById("loadTestParticipant").addEventListener("click", async () => {
-        if (!state.demoParticipantId) {
-          setStatus(t("knockoutSelectParticipantFirst"));
-          return;
-        }
-        try {
-          await openParticipantView(state.demoParticipantId);
-        } catch (err) {
-          setStatus(err.message);
-        }
-      });
+      document
+        .getElementById("loadTestParticipant")
+        .addEventListener("click", async () => {
+          if (!state.demoParticipantId) {
+            setStatus(t("knockoutSelectParticipantFirst"));
+            return;
+          }
+          try {
+            await openParticipantView(state.demoParticipantId);
+          } catch (err) {
+            setStatus(err.message);
+          }
+        });
 
-      document.getElementById("loadTestParticipant").style.display = state.testMode ? "" : "none";
-      document.getElementById("knockoutRecordsPanel").style.display = state.testMode ? "" : "none";
+      document.getElementById("loadTestParticipant").style.display =
+        state.testMode ? "" : "none";
+      document.getElementById("knockoutRecordsPanel").style.display =
+        state.testMode ? "" : "none";
 
-      document.getElementById("participantSelect").addEventListener("change", async (event) => {
-        state.selectedParticipantId = Number(event.target.value);
-        try {
-          setView("participant");
-          await Promise.all([loadParticipantPredictions(), loadKnockoutContext(), loadKnockoutRecords()]);
-          setStatus(t("viewingParticipant", { name: event.target.options[event.target.selectedIndex].text }));
-        } catch (err) {
-          setStatus(err.message);
-        }
-      });
+      document
+        .getElementById("participantSelect")
+        .addEventListener("change", async (event) => {
+          state.selectedParticipantId = Number(event.target.value);
+          try {
+            setView("participant");
+            await Promise.all([
+              loadParticipantPredictions(),
+              loadKnockoutContext(),
+              loadKnockoutRecords(),
+            ]);
+            setStatus(
+              t("viewingParticipant", {
+                name: event.target.options[event.target.selectedIndex].text,
+              }),
+            );
+          } catch (err) {
+            setStatus(err.message);
+          }
+        });
 
-      document.getElementById("standingsBody").addEventListener("click", async (event) => {
-        const row = event.target.closest("tr[data-participant-id]");
-        if (!row) return;
-        const participantId = Number(row.dataset.participantId);
-        if (!Number.isInteger(participantId)) return;
-        try {
-          await openParticipantView(participantId);
-        } catch (err) {
-          setStatus(err.message);
-        }
-      });
+      document
+        .getElementById("standingsBody")
+        .addEventListener("click", async (event) => {
+          const row = event.target.closest("tr[data-participant-id]");
+          if (!row) return;
+          const participantId = Number(row.dataset.participantId);
+          if (!Number.isInteger(participantId)) return;
+          try {
+            await openParticipantView(participantId);
+          } catch (err) {
+            setStatus(err.message);
+          }
+        });
 
-      document.getElementById("languageSelect").addEventListener("change", (event) => {
-        setLocale(event.target.value);
-      });
+      document
+        .getElementById("languageSelect")
+        .addEventListener("change", (event) => {
+          setLocale(event.target.value);
+        });
 
       document.getElementById("refresh").addEventListener("click", async () => {
         try {
@@ -1810,77 +2207,107 @@
         }
       });
 
-      document.getElementById("saveKnockout").addEventListener("click", async () => {
-        const context = state.knockoutContext;
-        if (!context?.focusRound || !context.canEdit) return;
-        if (!state.selectedParticipantId) {
-          setStatus(t("knockoutSelectParticipantFirst"));
-          return;
-        }
-        try {
-          const payload = [];
-          const editableMatches = (context.matches || []).filter((m) => {
-            if (context.isTestParticipant) return true;
-            return m.homeTeam && m.awayTeam && m.homeTeam !== "TBD" && m.awayTeam !== "TBD";
-          });
-          for (const match of editableMatches) {
-            const matchId = Number(match.id);
-            const homeInput = document.querySelector(`#knockoutPredictionsBody input[data-side="home"][data-match-id="${matchId}"]`);
-            const awayInput = document.querySelector(`#knockoutPredictionsBody input[data-side="away"][data-match-id="${matchId}"]`);
-            if (!homeInput || !awayInput) continue;
-            const homeVal = homeInput.value === "" ? null : Number(homeInput.value);
-            const awayVal = awayInput.value === "" ? null : Number(awayInput.value);
-            if (!Number.isInteger(homeVal) || !Number.isInteger(awayVal) || homeVal < 0 || awayVal < 0) {
-              setStatus(t("knockoutMissingValues"));
-              return;
-            }
-            payload.push({ matchId, predHome: homeVal, predAway: awayVal });
-          }
-          if (!payload.length || payload.length !== editableMatches.length) {
-            setStatus(t("knockoutMissingValues"));
-            return;
-          }
-          await getJson("/api/knockout/predictions", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              participantId: state.selectedParticipantId,
-              roundCode: context.focusRound,
-              predictions: payload,
-            }),
-          });
-          await Promise.all([loadKnockoutContext(), loadKnockoutRecords(), refreshOverview({ detectChanges: false })]);
-          const panel = document.getElementById("knockoutEditorPanel");
-          if (panel) panel.open = false;
-          setStatus(t("knockoutSaved"));
-        } catch (err) {
-          setStatus(err.message);
-        }
-      });
-
-      document.getElementById("openKnockoutFromBanner").addEventListener("click", async () => {
-        try {
-          const participantId = await requestParticipantIdentity();
-          if (!participantId) {
+      document
+        .getElementById("saveKnockout")
+        .addEventListener("click", async () => {
+          const context = state.knockoutContext;
+          if (!context?.focusRound || !context.canEdit) return;
+          if (!state.selectedParticipantId) {
             setStatus(t("knockoutSelectParticipantFirst"));
             return;
           }
-          await openParticipantView(participantId);
-          const panel = document.getElementById("knockoutEditorPanel");
-          if (panel) panel.open = true;
-          const editor = document.querySelector(".knockout-editor");
-          if (editor) editor.scrollIntoView({ behavior: "smooth", block: "start" });
-        } catch (err) {
-          setStatus(err.message);
-        }
-      });
+          try {
+            const payload = [];
+            const editableMatches = (context.matches || []).filter((m) => {
+              if (context.isTestParticipant) return true;
+              return (
+                m.homeTeam &&
+                m.awayTeam &&
+                m.homeTeam !== "TBD" &&
+                m.awayTeam !== "TBD"
+              );
+            });
+            for (const match of editableMatches) {
+              const matchId = Number(match.id);
+              const homeInput = document.querySelector(
+                `#knockoutPredictionsBody input[data-side="home"][data-match-id="${matchId}"]`,
+              );
+              const awayInput = document.querySelector(
+                `#knockoutPredictionsBody input[data-side="away"][data-match-id="${matchId}"]`,
+              );
+              if (!homeInput || !awayInput) continue;
+              const homeVal =
+                homeInput.value === "" ? null : Number(homeInput.value);
+              const awayVal =
+                awayInput.value === "" ? null : Number(awayInput.value);
+              if (
+                !Number.isInteger(homeVal) ||
+                !Number.isInteger(awayVal) ||
+                homeVal < 0 ||
+                awayVal < 0
+              ) {
+                setStatus(t("knockoutMissingValues"));
+                return;
+              }
+              payload.push({ matchId, predHome: homeVal, predAway: awayVal });
+            }
+            if (!payload.length || payload.length !== editableMatches.length) {
+              setStatus(t("knockoutMissingValues"));
+              return;
+            }
+            await getJson("/api/knockout/predictions", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                participantId: state.selectedParticipantId,
+                roundCode: context.focusRound,
+                predictions: payload,
+              }),
+            });
+            await Promise.all([
+              loadKnockoutContext(),
+              loadKnockoutRecords(),
+              refreshOverview({ detectChanges: false }),
+            ]);
+            const panel = document.getElementById("knockoutEditorPanel");
+            if (panel) panel.open = false;
+            setStatus(t("knockoutSaved"));
+          } catch (err) {
+            setStatus(err.message);
+          }
+        });
+
+      document
+        .getElementById("openKnockoutFromBanner")
+        .addEventListener("click", async () => {
+          try {
+            const participantId = await requestParticipantIdentity();
+            if (!participantId) {
+              setStatus(t("knockoutSelectParticipantFirst"));
+              return;
+            }
+            await openParticipantView(participantId);
+            const panel = document.getElementById("knockoutEditorPanel");
+            if (panel) panel.open = true;
+            const editor = document.querySelector(".knockout-editor");
+            if (editor)
+              editor.scrollIntoView({ behavior: "smooth", block: "start" });
+          } catch (err) {
+            setStatus(err.message);
+          }
+        });
 
       setLocale(detectPreferredLocale(), false);
       loadMeta()
         .catch(() => {})
         .finally(() => {
-          refreshAll({ detectChanges: false }).catch((err) => setStatus(err.message));
-          setInterval(() => refreshAll().catch((err) => setStatus(err.message)), 60000);
+          refreshAll({ detectChanges: false }).catch((err) =>
+            setStatus(err.message),
+          );
+          setInterval(
+            () => refreshAll().catch((err) => setStatus(err.message)),
+            60000,
+          );
           startSyncCountdown();
         });
     </script>
