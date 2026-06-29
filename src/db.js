@@ -4,9 +4,27 @@ const Database = require("better-sqlite3");
 const dbPath = path.join(process.cwd(), "data.db");
 const db = new Database(dbPath);
 
+function migrateResultsPenaltyColumnsIfNeeded() {
+  const table = db
+    .prepare(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'results'",
+    )
+    .get();
+  if (!table) return;
+  const columns = db.prepare("PRAGMA table_info(results)").all();
+  if (!columns.some((c) => c.name === "pen_home")) {
+    db.exec("ALTER TABLE results ADD COLUMN pen_home INTEGER");
+  }
+  if (!columns.some((c) => c.name === "pen_away")) {
+    db.exec("ALTER TABLE results ADD COLUMN pen_away INTEGER");
+  }
+}
+
 function migrateResultsTableIfNeeded() {
   const table = db
-    .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'results'")
+    .prepare(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'results'",
+    )
     .get();
   if (!table) return;
 
@@ -14,7 +32,8 @@ function migrateResultsTableIfNeeded() {
   const hasKickoffUtc = columns.some((c) => c.name === "kickoff_utc");
   const homeScore = columns.find((c) => c.name === "home_score");
   const awayScore = columns.find((c) => c.name === "away_score");
-  const needsNullableScores = homeScore?.notnull === 1 || awayScore?.notnull === 1;
+  const needsNullableScores =
+    homeScore?.notnull === 1 || awayScore?.notnull === 1;
   if (!needsNullableScores && hasKickoffUtc) return;
 
   db.exec(`
@@ -73,6 +92,8 @@ function initDb() {
       match_id INTEGER PRIMARY KEY,
       home_score INTEGER,
       away_score INTEGER,
+      pen_home INTEGER,
+      pen_away INTEGER,
       status TEXT NOT NULL DEFAULT 'scheduled',
       source TEXT NOT NULL DEFAULT 'manual',
       kickoff_utc TEXT,
@@ -125,6 +146,7 @@ function initDb() {
   `);
 
   migrateResultsTableIfNeeded();
+  migrateResultsPenaltyColumnsIfNeeded();
 }
 
 module.exports = { db, initDb };

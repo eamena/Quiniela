@@ -62,31 +62,40 @@ function importWorkbook(excelFilePath) {
   }
 
   const reset = db.transaction(() => {
-    db.prepare("DELETE FROM predictions").run();
-    db.prepare("DELETE FROM results").run();
-    db.prepare("DELETE FROM matches").run();
-    db.prepare("DELETE FROM participants").run();
+    // Preserve 16avos (and any other knockout bracket) data — only clear group-stage rows
+    db.prepare(
+      "DELETE FROM predictions WHERE match_id IN (SELECT id FROM matches WHERE stage NOT LIKE '16avos%')",
+    ).run();
+    db.prepare(
+      "DELETE FROM results WHERE match_id IN (SELECT id FROM matches WHERE stage NOT LIKE '16avos%')",
+    ).run();
+    db.prepare("DELETE FROM matches WHERE stage NOT LIKE '16avos%'").run();
   });
   reset();
 
-  const insertParticipant = db.prepare(
-    "INSERT INTO participants (name, source_col) VALUES (?, ?)"
+  const upsertParticipant = db.prepare(
+    `INSERT INTO participants (name, source_col) VALUES (?, ?)
+     ON CONFLICT(name) DO UPDATE SET source_col = excluded.source_col`,
+  );
+  const getParticipantByName = db.prepare(
+    "SELECT id FROM participants WHERE name = ?",
   );
   const insertMatch = db.prepare(
     `INSERT INTO matches
       (row_number, stage, home_team_id, home_team, away_team_id, away_team)
-      VALUES (?, ?, ?, ?, ?, ?)`
+      VALUES (?, ?, ?, ?, ?, ?)`,
   );
   const insertPrediction = db.prepare(
     `INSERT INTO predictions
       (participant_id, match_id, pred_home, pred_away)
-      VALUES (?, ?, ?, ?)`
+      VALUES (?, ?, ?, ?)`,
   );
 
   const participantIdByStartCol = new Map();
   for (const participant of participants) {
-    const result = insertParticipant.run(participant.name, participant.startCol);
-    participantIdByStartCol.set(participant.startCol, result.lastInsertRowid);
+    upsertParticipant.run(participant.name, participant.startCol);
+    const row = getParticipantByName.get(participant.name);
+    participantIdByStartCol.set(participant.startCol, row.id);
   }
 
   let currentStage = null;
@@ -119,15 +128,19 @@ function importWorkbook(excelFilePath) {
       homeTeamId,
       homeTeam,
       awayTeamId,
-      awayTeam
+      awayTeam,
     );
     const matchId = matchResult.lastInsertRowid;
     importedMatches += 1;
 
     for (const participant of participants) {
       const pId = participantIdByStartCol.get(participant.startCol);
-      const predHome = toInt(readCell(rows, rowNumber, participant.startCol + 4));
-      const predAway = toInt(readCell(rows, rowNumber, participant.startCol + 5));
+      const predHome = toInt(
+        readCell(rows, rowNumber, participant.startCol + 4),
+      );
+      const predAway = toInt(
+        readCell(rows, rowNumber, participant.startCol + 5),
+      );
       if (predHome === null || predAway === null) continue;
       insertPrediction.run(pId, matchId, predHome, predAway);
       importedPredictions += 1;

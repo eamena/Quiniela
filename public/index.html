@@ -708,11 +708,18 @@
             <h2 data-i18n="timelineTitle">Match timeline</h2>
             <div class="timeline-filters">
               <button
-                class="filter-chip active"
+                class="filter-chip"
                 data-filter="all"
                 data-i18n="filterAll"
               >
                 All
+              </button>
+              <button
+                class="filter-chip active"
+                data-filter="16avos"
+                data-i18n="filter16avos"
+              >
+                16avos de final
               </button>
               <button
                 class="filter-chip"
@@ -992,6 +999,7 @@
           tieBreakerTitle: "Tie-break rules",
           tieBreakerBody: "Sort by points, then exact hits, then outcome hits.",
           filterAll: "All",
+          filter16avos: "Round of 32",
           filterFinished: "Finished",
           filterLive: "Live",
           filterUpcoming: "Upcoming",
@@ -1092,6 +1100,7 @@
           tieBreakerBody:
             "Ordena por puntos, luego exactos y después aciertos de resultado.",
           filterAll: "Todos",
+          filter16avos: "16avos de final",
           filterFinished: "Finalizados",
           filterLive: "En vivo",
           filterUpcoming: "Próximos",
@@ -1169,7 +1178,7 @@
           played: 0,
         },
         locale: "en",
-        matchFilter: "all",
+        matchFilter: "16avos",
         botCron: null,
         botEnabled: true,
         botIntervalMinutes: null,
@@ -1307,6 +1316,9 @@
         const text = String(stage).trim();
         if (/^(LAST_32|LAST_16|QUARTER_FINALS|SEMI_FINALS|FINAL)$/.test(text)) {
           return getRoundLabel(text);
+        }
+        if (/16avos/i.test(text)) {
+          return state.locale === "en" ? "Round of 32" : "16avos de final";
         }
         const groupFromSpanish = text.match(/^grupo\s+(.+)$/i);
         const groupFromEnglish = text.match(/^group\s+(.+)$/i);
@@ -1557,6 +1569,9 @@
 
       function getFilteredMatches(rows) {
         if (state.matchFilter === "all") return rows;
+        if (state.matchFilter === "16avos") {
+          return rows.filter((row) => row.stage && /16avos/i.test(row.stage));
+        }
         return rows.filter(
           (row) => statusPill(row.status) === state.matchFilter,
         );
@@ -1675,7 +1690,7 @@
               : "-";
             const score =
               Number.isInteger(row.homeScore) && Number.isInteger(row.awayScore)
-                ? `${row.homeScore} - ${row.awayScore}`
+                ? `${row.homeScore} - ${row.awayScore}${Number.isInteger(row.penHome) && Number.isInteger(row.penAway) ? ` (pen ${row.penHome}-${row.penAway})` : ""}`
                 : "-";
             const highlight = state.highlightMatchIds.has(row.id)
               ? "recent-update"
@@ -1935,7 +1950,7 @@
           .map((row) => {
             const resultText =
               Number.isInteger(row.realHome) && Number.isInteger(row.realAway)
-                ? `${row.realHome} - ${row.realAway}`
+                ? `${row.realHome} - ${row.realAway}${Number.isInteger(row.penHome) && Number.isInteger(row.penAway) ? ` <small>(pen ${row.penHome}-${row.penAway})</small>` : ""}`
                 : "-";
             return `
               <tr>

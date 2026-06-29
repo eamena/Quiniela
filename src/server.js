@@ -4,7 +4,11 @@ const express = require("express");
 const path = require("path");
 const { initDb, db } = require("./db");
 const { importWorkbook } = require("./importer");
-const { getStandings, getLatestMatches, getMatchTimeline } = require("./standings");
+const {
+  getStandings,
+  getLatestMatches,
+  getMatchTimeline,
+} = require("./standings");
 const { scorePrediction } = require("./scoring");
 const { syncResultsFromApi } = require("./scoreProvider");
 const { startBot } = require("./bot");
@@ -12,7 +16,8 @@ const { getKnockoutContext, upsertKnockoutPredictions } = require("./knockout");
 
 const app = express();
 const port = Number(process.env.PORT || 3000);
-const excelFile = process.env.EXCEL_FILE || "Participantes Amigos Mundial 2026.xlsx";
+const excelFile =
+  process.env.EXCEL_FILE || "Participantes Amigos Mundial 2026.xlsx";
 const TEST_PARTICIPANT_NAME = "Knockout Test Participant";
 
 app.use(express.json());
@@ -24,7 +29,8 @@ app.get("/api/health", (_req, res) => {
 
 app.get("/api/meta", (_req, res) => {
   res.json({
-    botEnabled: String(process.env.ENABLE_BOT || "true").toLowerCase() === "true",
+    botEnabled:
+      String(process.env.ENABLE_BOT || "true").toLowerCase() === "true",
     botCron: process.env.BOT_CRON || "*/10 * * * *",
   });
 });
@@ -42,7 +48,9 @@ app.get("/api/matches/latest", (req, res) => {
 
 app.get("/api/participants", (_req, res) => {
   const participants = db
-    .prepare("SELECT id, name, source_col AS sourceCol FROM participants ORDER BY name")
+    .prepare(
+      "SELECT id, name, source_col AS sourceCol FROM participants ORDER BY name",
+    )
     .all();
   res.json({ participants });
 });
@@ -50,7 +58,9 @@ app.get("/api/participants", (_req, res) => {
 app.get("/api/participants/:participantId/predictions", (req, res) => {
   const participantId = Number(req.params.participantId);
   if (!Number.isInteger(participantId)) {
-    return res.status(400).json({ ok: false, error: "participantId must be an integer." });
+    return res
+      .status(400)
+      .json({ ok: false, error: "participantId must be an integer." });
   }
 
   const participant = db
@@ -64,6 +74,7 @@ app.get("/api/participants/:participantId/predictions", (req, res) => {
     .prepare(
       `SELECT
         m.id AS matchId,
+        m.row_number AS rowNumber,
         m.stage AS stage,
         m.home_team AS homeTeam,
         m.away_team AS awayTeam,
@@ -71,12 +82,15 @@ app.get("/api/participants/:participantId/predictions", (req, res) => {
         p.pred_away AS predAway,
         r.home_score AS realHome,
         r.away_score AS realAway,
+        r.pen_home AS penHome,
+        r.pen_away AS penAway,
+        r.kickoff_utc AS kickoffUtc,
         r.status AS status
       FROM predictions p
       JOIN matches m ON m.id = p.match_id
       LEFT JOIN results r ON r.match_id = p.match_id
       WHERE p.participant_id = ?
-      ORDER BY m.row_number ASC`
+      ORDER BY m.row_number ASC`,
     )
     .all(participantId);
 
@@ -90,11 +104,12 @@ app.get("/api/participants/:participantId/predictions", (req, res) => {
         kp.pred_away AS predAway,
         km.home_score AS realHome,
         km.away_score AS realAway,
+        km.kickoff_utc AS kickoffUtc,
         km.status AS status
       FROM knockout_predictions kp
       JOIN knockout_matches km ON km.id = kp.knockout_match_id
       WHERE kp.participant_id = ?
-      ORDER BY datetime(km.kickoff_utc) ASC`
+      ORDER BY datetime(km.kickoff_utc) ASC`,
     )
     .all(participantId);
 
@@ -103,13 +118,19 @@ app.get("/api/participants/:participantId/predictions", (req, res) => {
   let outcomes = 0;
 
   const predictions = rows.map((row) => {
-    const hasResult = Number.isInteger(row.realHome) && Number.isInteger(row.realAway);
+    const hasResult =
+      Number.isInteger(row.realHome) && Number.isInteger(row.realAway);
     let points = null;
     let exactHit = 0;
     let outcomeHit = 0;
 
     if (hasResult) {
-      const score = scorePrediction(row.predHome, row.predAway, row.realHome, row.realAway);
+      const score = scorePrediction(
+        row.predHome,
+        row.predAway,
+        row.realHome,
+        row.realAway,
+      );
       points = score.points;
       exactHit = score.exact;
       outcomeHit = score.outcome;
@@ -126,13 +147,36 @@ app.get("/api/participants/:participantId/predictions", (req, res) => {
     };
   });
 
+  // Determine which round_codes are already covered by xlsx-imported stages
+  // so we don't show the same games twice (e.g. "16avos de final" and "LAST_32").
+  const STAGE_TO_ROUND_CODE = [
+    [/16avos/i, "LAST_32"],
+    [/octavos/i, "LAST_16"],
+    [/cuartos/i, "QUARTER_FINALS"],
+    [/semi/i, "SEMI_FINALS"],
+    [/^final$/i, "FINAL"],
+  ];
+  const stagesInRows = new Set(rows.map((r) => r.stage).filter(Boolean));
+  const coveredRoundCodes = new Set(
+    STAGE_TO_ROUND_CODE.filter(([pattern]) =>
+      [...stagesInRows].some((s) => pattern.test(s)),
+    ).map(([, code]) => code),
+  );
+
   for (const row of knockoutRows) {
-    const hasResult = Number.isInteger(row.realHome) && Number.isInteger(row.realAway);
+    if (coveredRoundCodes.has(row.stage)) continue;
+    const hasResult =
+      Number.isInteger(row.realHome) && Number.isInteger(row.realAway);
     let points = null;
     let exactHit = 0;
     let outcomeHit = 0;
     if (hasResult) {
-      const score = scorePrediction(row.predHome, row.predAway, row.realHome, row.realAway);
+      const score = scorePrediction(
+        row.predHome,
+        row.predAway,
+        row.realHome,
+        row.realAway,
+      );
       points = score.points;
       exactHit = score.exact;
       outcomeHit = score.outcome;
@@ -148,6 +192,25 @@ app.get("/api/participants/:participantId/predictions", (req, res) => {
     });
   }
 
+  // Sort: bracket/knockout stages first (by date), group stage after (original order)
+  function isBracketStage(stage) {
+    if (!stage) return false;
+    if (/^(LAST_32|LAST_16|QUARTER_FINALS|SEMI_FINALS|FINAL)$/.test(stage))
+      return true;
+    return !/^grupo\s/i.test(stage);
+  }
+  predictions.sort((a, b) => {
+    const ap = isBracketStage(a.stage) ? 0 : 1;
+    const bp = isBracketStage(b.stage) ? 0 : 1;
+    if (ap !== bp) return ap - bp;
+    if (ap === 0) {
+      const at = a.kickoffUtc ? Date.parse(a.kickoffUtc) : Infinity;
+      const bt = b.kickoffUtc ? Date.parse(b.kickoffUtc) : Infinity;
+      if (at !== bt) return at - bt;
+    }
+    return (a.rowNumber ?? 0) - (b.rowNumber ?? 0);
+  });
+
   return res.json({
     participant,
     summary: {
@@ -162,18 +225,25 @@ app.get("/api/participants/:participantId/predictions", (req, res) => {
 
 app.get("/api/knockout/context", (req, res) => {
   const participantIdRaw = req.query.participantId;
-  const participantId = participantIdRaw === undefined ? null : Number(participantIdRaw);
+  const participantId =
+    participantIdRaw === undefined ? null : Number(participantIdRaw);
   if (participantIdRaw !== undefined && !Number.isInteger(participantId)) {
-    return res.status(400).json({ ok: false, error: "participantId must be an integer when provided." });
+    return res.status(400).json({
+      ok: false,
+      error: "participantId must be an integer when provided.",
+    });
   }
   return res.json({ ok: true, ...getKnockoutContext(participantId) });
 });
 
 app.get("/api/debug/knockout-records", (req, res) => {
   const participantIdRaw = req.query.participantId;
-  const participantId = participantIdRaw === undefined ? null : Number(participantIdRaw);
+  const participantId =
+    participantIdRaw === undefined ? null : Number(participantIdRaw);
   if (!Number.isInteger(participantId)) {
-    return res.status(400).json({ ok: false, error: "participantId must be an integer." });
+    return res
+      .status(400)
+      .json({ ok: false, error: "participantId must be an integer." });
   }
 
   const participant = db
@@ -188,7 +258,7 @@ app.get("/api/debug/knockout-records", (req, res) => {
       `SELECT round_code AS roundCode, locked_at AS lockedAt
        FROM knockout_submission_locks
        WHERE participant_id = ?
-       ORDER BY datetime(locked_at) DESC`
+       ORDER BY datetime(locked_at) DESC`,
     )
     .all(participantId);
 
@@ -206,7 +276,7 @@ app.get("/api/debug/knockout-records", (req, res) => {
        FROM knockout_predictions kp
        JOIN knockout_matches km ON km.id = kp.knockout_match_id
        WHERE kp.participant_id = ?
-       ORDER BY km.round_code, datetime(km.kickoff_utc) ASC`
+       ORDER BY km.round_code, datetime(km.kickoff_utc) ASC`,
     )
     .all(participantId);
 
@@ -216,21 +286,31 @@ app.get("/api/debug/knockout-records", (req, res) => {
 app.post("/api/knockout/predictions", (req, res) => {
   const { participantId, roundCode, predictions } = req.body || {};
   if (!Number.isInteger(participantId)) {
-    return res.status(400).json({ ok: false, error: "participantId must be an integer." });
+    return res
+      .status(400)
+      .json({ ok: false, error: "participantId must be an integer." });
   }
   if (typeof roundCode !== "string" || roundCode.trim() === "") {
     return res.status(400).json({ ok: false, error: "roundCode is required." });
   }
   if (!Array.isArray(predictions) || predictions.length === 0) {
-    return res.status(400).json({ ok: false, error: "predictions must be a non-empty array." });
+    return res
+      .status(400)
+      .json({ ok: false, error: "predictions must be a non-empty array." });
   }
-  const participant = db.prepare("SELECT id FROM participants WHERE id = ?").get(participantId);
+  const participant = db
+    .prepare("SELECT id FROM participants WHERE id = ?")
+    .get(participantId);
   if (!participant) {
     return res.status(404).json({ ok: false, error: "Participant not found." });
   }
 
   try {
-    const summary = upsertKnockoutPredictions(participantId, roundCode, predictions);
+    const summary = upsertKnockoutPredictions(
+      participantId,
+      roundCode,
+      predictions,
+    );
     return res.json({ ok: true, summary });
   } catch (err) {
     const message = String(err.message || "");
@@ -261,8 +341,15 @@ app.post("/api/scores/sync", async (_req, res) => {
 
 app.post("/api/results/manual", (req, res) => {
   const { matchId, homeScore, awayScore, status = "finished" } = req.body || {};
-  if (!Number.isInteger(matchId) || !Number.isInteger(homeScore) || !Number.isInteger(awayScore)) {
-    return res.status(400).json({ ok: false, error: "matchId, homeScore, awayScore must be integers." });
+  if (
+    !Number.isInteger(matchId) ||
+    !Number.isInteger(homeScore) ||
+    !Number.isInteger(awayScore)
+  ) {
+    return res.status(400).json({
+      ok: false,
+      error: "matchId, homeScore, awayScore must be integers.",
+    });
   }
 
   const exists = db.prepare("SELECT id FROM matches WHERE id = ?").get(matchId);
@@ -278,10 +365,10 @@ app.post("/api/results/manual", (req, res) => {
        away_score = excluded.away_score,
        status = excluded.status,
        source = 'manual',
-       updated_at = CURRENT_TIMESTAMP`
+       updated_at = CURRENT_TIMESTAMP`,
   ).run(matchId, homeScore, awayScore, status);
 
-  return   res.json({ ok: true });
+  return res.json({ ok: true });
 });
 
 app.get("/test-participant", (_req, res) => {
@@ -290,13 +377,17 @@ app.get("/test-participant", (_req, res) => {
 
 function boot() {
   initDb();
-  db.prepare("INSERT OR IGNORE INTO participants (name, source_col) VALUES (?, ?)")
-    .run(TEST_PARTICIPANT_NAME, -999);
+  db.prepare(
+    "INSERT OR IGNORE INTO participants (name, source_col) VALUES (?, ?)",
+  ).run(TEST_PARTICIPANT_NAME, -999);
 
-  const autoImport = String(process.env.ENABLE_AUTO_IMPORT || "true").toLowerCase() === "true";
+  const autoImport =
+    String(process.env.ENABLE_AUTO_IMPORT || "true").toLowerCase() === "true";
   if (autoImport) {
     try {
-      const existingMatches = db.prepare("SELECT COUNT(*) AS count FROM matches").get().count;
+      const existingMatches = db
+        .prepare("SELECT COUNT(*) AS count FROM matches")
+        .get().count;
       if (existingMatches === 0) {
         const summary = importWorkbook(excelFile);
         console.log("Imported workbook:", summary);

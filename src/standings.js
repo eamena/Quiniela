@@ -4,7 +4,9 @@ const { applyKnockoutScoring } = require("./knockout");
 
 function getStandings({ includeTest = false } = {}) {
   const participants = db
-    .prepare("SELECT id, name, source_col AS sourceCol FROM participants ORDER BY name")
+    .prepare(
+      "SELECT id, name, source_col AS sourceCol FROM participants ORDER BY name",
+    )
     .all();
 
   const finishedPredictions = db
@@ -17,15 +19,23 @@ function getStandings({ includeTest = false } = {}) {
         r.away_score AS real_away
       FROM predictions p
       JOIN results r ON r.match_id = p.match_id
-      WHERE r.status = 'finished'`
+      WHERE r.status = 'finished'`,
     )
     .all();
 
   const statsByParticipant = new Map(
     participants.map((p) => [
       p.id,
-      { participantId: p.id, participant: p.name, sourceCol: p.sourceCol, points: 0, exact: 0, outcomes: 0, played: 0 },
-    ])
+      {
+        participantId: p.id,
+        participant: p.name,
+        sourceCol: p.sourceCol,
+        points: 0,
+        exact: 0,
+        outcomes: 0,
+        played: 0,
+      },
+    ]),
   );
 
   for (const row of finishedPredictions) {
@@ -35,7 +45,7 @@ function getStandings({ includeTest = false } = {}) {
       row.pred_home,
       row.pred_away,
       row.real_home,
-      row.real_away
+      row.real_away,
     );
     stats.points += result.points;
     stats.exact += result.exact;
@@ -45,7 +55,9 @@ function getStandings({ includeTest = false } = {}) {
 
   applyKnockoutScoring(statsByParticipant);
 
-  const rows = Array.from(statsByParticipant.values()).filter((row) => includeTest || row.sourceCol !== -999);
+  const rows = Array.from(statsByParticipant.values()).filter(
+    (row) => includeTest || row.sourceCol !== -999,
+  );
 
   return rows.sort((a, b) => {
     if (b.points !== a.points) return b.points - a.points;
@@ -65,6 +77,8 @@ function getLatestMatches(limit = 20) {
         m.away_team AS awayTeam,
         r.home_score AS homeScore,
         r.away_score AS awayScore,
+        r.pen_home AS penHome,
+        r.pen_away AS penAway,
         r.status,
         r.source,
         r.kickoff_utc AS kickoffUtc,
@@ -75,7 +89,7 @@ function getLatestMatches(limit = 20) {
         CASE WHEN r.kickoff_utc IS NULL THEN 1 ELSE 0 END,
         datetime(r.kickoff_utc) ASC,
         m.row_number ASC
-      LIMIT ?`
+      LIMIT ?`,
     )
     .all(safeLimit);
 }

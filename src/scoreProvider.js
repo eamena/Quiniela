@@ -112,14 +112,16 @@ function getStmts() {
       "SELECT id, home_team, away_team FROM matches",
     );
     stmts.getResult = db.prepare(
-      "SELECT home_score, away_score, status, kickoff_utc FROM results WHERE match_id = ?",
+      "SELECT home_score, away_score, pen_home, pen_away, status, kickoff_utc FROM results WHERE match_id = ?",
     );
     stmts.upsertResult = db.prepare(
-      `INSERT INTO results (match_id, home_score, away_score, status, source, kickoff_utc, updated_at)
-       VALUES (?, ?, ?, ?, 'football-data', ?, CURRENT_TIMESTAMP)
+      `INSERT INTO results (match_id, home_score, away_score, pen_home, pen_away, status, source, kickoff_utc, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, 'football-data', ?, CURRENT_TIMESTAMP)
        ON CONFLICT(match_id) DO UPDATE SET
          home_score = excluded.home_score,
          away_score = excluded.away_score,
+         pen_home = excluded.pen_home,
+         pen_away = excluded.pen_away,
          status = excluded.status,
          source = 'football-data',
          kickoff_utc = excluded.kickoff_utc,
@@ -173,6 +175,8 @@ function hasResultChanged(existing, incoming) {
   return (
     existing.home_score !== incoming.homeScore ||
     existing.away_score !== incoming.awayScore ||
+    existing.pen_home !== (incoming.penHome ?? null) ||
+    existing.pen_away !== (incoming.penAway ?? null) ||
     existing.status !== incoming.status ||
     existing.kickoff_utc !== incoming.utcDate
   );
@@ -200,20 +204,42 @@ async function fetchWorldCupMatches(apiToken) {
   );
 
   const matches = response.data?.matches || [];
-  return matches.map((m) => ({
-    apiMatchId: m.id,
-    stage: m.stage || null,
-    homeTeam: m.homeTeam?.name,
-    awayTeam: m.awayTeam?.name,
-    homeScore: Number.isInteger(m.score?.fullTime?.home)
-      ? m.score.fullTime.home
-      : null,
-    awayScore: Number.isInteger(m.score?.fullTime?.away)
-      ? m.score.fullTime.away
-      : null,
-    utcDate: m.utcDate || null,
-    status: normalizeStatus(m.status),
-  }));
+  return matches.map((m) => {
+    // Use extra time score when played (120 min); otherwise use full time (90 min).
+    // Penalty shootout goals are never counted toward the prediction score.
+    const etHome = m.score?.extraTime?.home;
+    const etAway = m.score?.extraTime?.away;
+    const ftHome = m.score?.fullTime?.home;
+    const ftAway = m.score?.fullTime?.away;
+    const homeScore = Number.isInteger(etHome)
+      ? etHome
+      : Number.isInteger(ftHome)
+        ? ftHome
+        : null;
+    const awayScore = Number.isInteger(etAway)
+      ? etAway
+      : Number.isInteger(ftAway)
+        ? ftAway
+        : null;
+    const penHome = Number.isInteger(m.score?.penalties?.home)
+      ? m.score.penalties.home
+      : null;
+    const penAway = Number.isInteger(m.score?.penalties?.away)
+      ? m.score.penalties.away
+      : null;
+    return {
+      apiMatchId: m.id,
+      stage: m.stage || null,
+      homeTeam: m.homeTeam?.name,
+      awayTeam: m.awayTeam?.name,
+      homeScore,
+      awayScore,
+      penHome,
+      penAway,
+      utcDate: m.utcDate || null,
+      status: normalizeStatus(m.status),
+    };
+  });
 }
 
 /**
@@ -297,6 +323,8 @@ async function syncResultsFromApi() {
         local.id,
         ext.homeScore,
         ext.awayScore,
+        ext.penHome ?? null,
+        ext.penAway ?? null,
         ext.status,
         ext.utcDate,
       ).changes;
