@@ -32,10 +32,12 @@ function importBracket16avos(filePath) {
     raw: true,
   });
 
-  // Row 3 (index 2, 0-based) holds participant names every PARTICIPANT_BLOCK_SIZE columns
+  // Row 3 (index 2, 0-based) holds participant names at the start of each block.
+  // Some spreadsheets may contain shifted blocks, so scan all columns instead of
+  // assuming perfect 5-column alignment.
   const nameRow = rows[2] || [];
   const participants = [];
-  for (let col = 0; col < nameRow.length; col += PARTICIPANT_BLOCK_SIZE) {
+  for (let col = 0; col < nameRow.length; col++) {
     const name = nameRow[col];
     if (name && String(name).trim()) {
       participants.push({ name: String(name).trim(), colIndex: col });
