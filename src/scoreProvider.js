@@ -170,6 +170,36 @@ function normalizeStatus(status) {
   return v ? v.toLowerCase() : "scheduled";
 }
 
+function pickMatchScore(score) {
+  const rtHome = score?.regularTime?.home;
+  const rtAway = score?.regularTime?.away;
+  const ftHome = score?.fullTime?.home;
+  const ftAway = score?.fullTime?.away;
+  const etHome = score?.extraTime?.home;
+  const etAway = score?.extraTime?.away;
+  const hasPens =
+    Number.isInteger(score?.penalties?.home) &&
+    Number.isInteger(score?.penalties?.away);
+
+  // For shootouts, score regular time to avoid upstream anomalies where
+  // extra/full-time can arrive as 0-0 while penalties are present.
+  if (hasPens && Number.isInteger(rtHome) && Number.isInteger(rtAway)) {
+    return { homeScore: rtHome, awayScore: rtAway };
+  }
+
+  if (Number.isInteger(ftHome) && Number.isInteger(ftAway)) {
+    return { homeScore: ftHome, awayScore: ftAway };
+  }
+  if (Number.isInteger(etHome) && Number.isInteger(etAway)) {
+    return { homeScore: etHome, awayScore: etAway };
+  }
+  if (Number.isInteger(rtHome) && Number.isInteger(rtAway)) {
+    return { homeScore: rtHome, awayScore: rtAway };
+  }
+
+  return { homeScore: null, awayScore: null };
+}
+
 function hasResultChanged(existing, incoming) {
   if (!existing) return true;
   return (
@@ -205,22 +235,7 @@ async function fetchWorldCupMatches(apiToken) {
 
   const matches = response.data?.matches || [];
   return matches.map((m) => {
-    // Use extra time score when played (120 min); otherwise use full time (90 min).
-    // Penalty shootout goals are never counted toward the prediction score.
-    const etHome = m.score?.extraTime?.home;
-    const etAway = m.score?.extraTime?.away;
-    const ftHome = m.score?.fullTime?.home;
-    const ftAway = m.score?.fullTime?.away;
-    const homeScore = Number.isInteger(etHome)
-      ? etHome
-      : Number.isInteger(ftHome)
-        ? ftHome
-        : null;
-    const awayScore = Number.isInteger(etAway)
-      ? etAway
-      : Number.isInteger(ftAway)
-        ? ftAway
-        : null;
+    const { homeScore, awayScore } = pickMatchScore(m.score);
     const penHome = Number.isInteger(m.score?.penalties?.home)
       ? m.score.penalties.home
       : null;
