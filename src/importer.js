@@ -62,14 +62,16 @@ function importWorkbook(excelFilePath) {
   }
 
   const reset = db.transaction(() => {
-    // Preserve 16avos (and any other knockout bracket) data — only clear group-stage rows
+    // Only clear group-stage rows; preserve all knockout bracket data (16avos, octavos, etc.)
     db.prepare(
-      "DELETE FROM predictions WHERE match_id IN (SELECT id FROM matches WHERE stage NOT LIKE '16avos%')",
+      "DELETE FROM predictions WHERE match_id IN (SELECT id FROM matches WHERE stage LIKE 'Grupo%' OR stage LIKE 'grupo%')",
     ).run();
     db.prepare(
-      "DELETE FROM results WHERE match_id IN (SELECT id FROM matches WHERE stage NOT LIKE '16avos%')",
+      "DELETE FROM results WHERE match_id IN (SELECT id FROM matches WHERE stage LIKE 'Grupo%' OR stage LIKE 'grupo%')",
     ).run();
-    db.prepare("DELETE FROM matches WHERE stage NOT LIKE '16avos%'").run();
+    db.prepare(
+      "DELETE FROM matches WHERE stage LIKE 'Grupo%' OR stage LIKE 'grupo%'",
+    ).run();
   });
   reset();
 

@@ -715,11 +715,18 @@
                 All
               </button>
               <button
-                class="filter-chip active"
+                class="filter-chip"
                 data-filter="16avos"
                 data-i18n="filter16avos"
               >
                 16avos de final
+              </button>
+              <button
+                class="filter-chip active"
+                data-filter="octavos"
+                data-i18n="filterOctavos"
+              >
+                Octavos de final
               </button>
               <button
                 class="filter-chip"
@@ -1000,6 +1007,7 @@
           tieBreakerBody: "Sort by points, then exact hits, then outcome hits.",
           filterAll: "All",
           filter16avos: "Round of 32",
+          filterOctavos: "Round of 16",
           filterFinished: "Finished",
           filterLive: "Live",
           filterUpcoming: "Upcoming",
@@ -1101,6 +1109,7 @@
             "Ordena por puntos, luego exactos y después aciertos de resultado.",
           filterAll: "Todos",
           filter16avos: "16avos de final",
+          filterOctavos: "Octavos de final",
           filterFinished: "Finalizados",
           filterLive: "En vivo",
           filterUpcoming: "Próximos",
@@ -1178,7 +1187,7 @@
           played: 0,
         },
         locale: "en",
-        matchFilter: "16avos",
+        matchFilter: "octavos",
         botCron: null,
         botEnabled: true,
         botIntervalMinutes: null,
@@ -1319,6 +1328,9 @@
         }
         if (/16avos/i.test(text)) {
           return state.locale === "en" ? "Round of 32" : "16avos de final";
+        }
+        if (/octavos/i.test(text)) {
+          return state.locale === "en" ? "Round of 16" : "Octavos de final";
         }
         const groupFromSpanish = text.match(/^grupo\s+(.+)$/i);
         const groupFromEnglish = text.match(/^group\s+(.+)$/i);
@@ -1571,6 +1583,9 @@
         if (state.matchFilter === "all") return rows;
         if (state.matchFilter === "16avos") {
           return rows.filter((row) => row.stage && /16avos/i.test(row.stage));
+        }
+        if (state.matchFilter === "octavos") {
+          return rows.filter((row) => row.stage && /octavos/i.test(row.stage));
         }
         return rows.filter(
           (row) => statusPill(row.status) === state.matchFilter,

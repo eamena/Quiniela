@@ -90,7 +90,13 @@ app.get("/api/participants/:participantId/predictions", (req, res) => {
       JOIN matches m ON m.id = p.match_id
       LEFT JOIN results r ON r.match_id = p.match_id
       WHERE p.participant_id = ?
-      ORDER BY m.row_number ASC`,
+      ORDER BY
+        CASE 
+          WHEN m.stage = 'Octavos de final' THEN 0
+          WHEN m.stage = '16avos de final' THEN 1
+          ELSE 2
+        END ASC,
+        m.row_number ASC`,
     )
     .all(participantId);
 
@@ -192,17 +198,32 @@ app.get("/api/participants/:participantId/predictions", (req, res) => {
     });
   }
 
-  // Sort: bracket/knockout stages first (by date), group stage after (original order)
-  function isBracketStage(stage) {
-    if (!stage) return false;
-    if (/^(LAST_32|LAST_16|QUARTER_FINALS|SEMI_FINALS|FINAL)$/.test(stage))
-      return true;
-    return !/^grupo\s/i.test(stage);
-  }
+  // Sort: Octavos (Round of 16) first, then 16avos (Round of 32), then bracket/knockout stages by date, group stage after
   predictions.sort((a, b) => {
+    // Octavos de final should come first
+    const aIsOctavos = a.stage === "Octavos de final";
+    const bIsOctavos = b.stage === "Octavos de final";
+    if (aIsOctavos && !bIsOctavos) return -1;
+    if (!aIsOctavos && bIsOctavos) return 1;
+
+    // Then 16avos de final
+    const aIs16avos = a.stage === "16avos de final";
+    const bIs16avos = b.stage === "16avos de final";
+    if (aIs16avos && !bIs16avos) return -1;
+    if (!aIs16avos && bIs16avos) return 1;
+
+    // Then other bracket stages by date
+    const isBracketStage = (stage) => {
+      if (!stage) return false;
+      if (/^(LAST_32|LAST_16|QUARTER_FINALS|SEMI_FINALS|FINAL)$/.test(stage))
+        return true;
+      return !/^grupo\s/i.test(stage);
+    };
+
     const ap = isBracketStage(a.stage) ? 0 : 1;
     const bp = isBracketStage(b.stage) ? 0 : 1;
     if (ap !== bp) return ap - bp;
+
     if (ap === 0) {
       const at = a.kickoffUtc ? Date.parse(a.kickoffUtc) : Infinity;
       const bt = b.kickoffUtc ? Date.parse(b.kickoffUtc) : Infinity;
