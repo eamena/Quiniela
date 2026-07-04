@@ -8,6 +8,7 @@
     "start": "node src/server.js",
     "import": "node src/cli/import.js",
     "import16avos": "node src/cli/import16avos.js",
+    "import8avos": "node src/cli/import8avos.js",
     "sync": "node src/cli/sync.js"
   },
   "keywords": [],
