@@ -1035,6 +1035,11 @@
           knockoutBannerOpen:
             "{round} is open for predictions now. Closes at {close}.",
           knockoutBannerSoon: "{round} opens in less than 24h at {open}.",
+          knockoutBannerSubmitted:
+            "{round} was already submitted on {time} for the selected participant.",
+          knockoutAlreadySubmittedStatus:
+            "You already entered predictions for {round} on {time}.",
+          knockoutReadyStatus: "You can enter predictions for {round} now.",
           knockoutWindowOpenNote: "Editing window open until {close}.",
           knockoutWindowClosedNote:
             "This round is closed. Next opening: {open}.",
@@ -1056,7 +1061,7 @@
           round_LAST_32: "Round of 32",
           round_LAST_16: "Round of 16",
           round_QUARTER_FINALS: "Quarter-finals",
-          round_SEMI_FINALS: "Semi-finals",
+          round_SEMI_FINALS: "Round of 4",
           round_FINAL: "Final",
           knockoutSaved:
             "Knockout predictions submitted. This round is now locked.",
@@ -1138,6 +1143,11 @@
           knockoutBannerOpen:
             "{round} está abierta para predicciones ahora. Cierra a las {close}.",
           knockoutBannerSoon: "{round} abre en menos de 24h a las {open}.",
+          knockoutBannerSubmitted:
+            "{round} ya fue enviada el {time} para el participante seleccionado.",
+          knockoutAlreadySubmittedStatus:
+            "Ya ingresaste predicciones para {round} el {time}.",
+          knockoutReadyStatus: "Ya puedes ingresar predicciones para {round}.",
           knockoutWindowOpenNote:
             "Ventana de edición abierta hasta las {close}.",
           knockoutWindowClosedNote:
@@ -1872,9 +1882,7 @@
         const saveButton = document.getElementById("saveKnockout");
         const panel = document.getElementById("knockoutEditorPanel");
         const context = state.knockoutContext;
-        const visible = Boolean(
-          state.testMode || context?.canEdit || context?.hasSubmitted,
-        );
+        const visible = Boolean(state.testMode || context?.canEdit);
         if (panel) panel.style.display = visible ? "" : "none";
         if (!visible) return;
         policyNote.textContent =
@@ -2042,15 +2050,20 @@
         if (name) setStatus(t("viewingParticipant", { name }));
       }
 
-      async function requestParticipantIdentity() {
+      async function requestParticipantIdentity(forcePrompt = false) {
         if (!state.participants.length) return null;
+        if (!forcePrompt && state.selectedParticipantId) {
+          return state.selectedParticipantId;
+        }
         const dialog = document.getElementById("participantIdentityDialog");
         const select = document.getElementById("participantIdentitySelect");
         if (!dialog || !dialog.showModal) {
           return state.selectedParticipantId || state.participants[0].id;
         }
         renderIdentityParticipantOptions();
-        if (!select.value && state.participants.length) {
+        if (state.selectedParticipantId) {
+          select.value = String(state.selectedParticipantId);
+        } else if (!select.value && state.participants.length) {
           select.value = String(state.participants[0].id);
         }
         dialog.returnValue = "";
@@ -2345,6 +2358,7 @@
               }),
             });
             await Promise.all([
+              loadParticipantPredictions(),
               loadKnockoutContext(),
               loadKnockoutRecords(),
               refreshOverview({ detectChanges: false }),
@@ -2361,17 +2375,39 @@
         .getElementById("openKnockoutFromBanner")
         .addEventListener("click", async () => {
           try {
-            const participantId = await requestParticipantIdentity();
+            const participantId = await requestParticipantIdentity(true);
             if (!participantId) {
               setStatus(t("knockoutSelectParticipantFirst"));
               return;
             }
             await openParticipantView(participantId);
+            const context = state.knockoutContext;
+            if (context?.hasSubmitted) {
+              setStatus(
+                t("knockoutAlreadySubmittedStatus", {
+                  round: getRoundLabel(context.focusRound),
+                  time: formatDateTime(context.lockedAt),
+                }),
+              );
+              const panel = document.getElementById("knockoutEditorPanel");
+              if (panel) {
+                panel.open = false;
+                panel.style.display = "none";
+              }
+              return;
+            }
             const panel = document.getElementById("knockoutEditorPanel");
             if (panel) panel.open = true;
             const editor = document.querySelector(".knockout-editor");
             if (editor)
               editor.scrollIntoView({ behavior: "smooth", block: "start" });
+            if (context?.focusRound) {
+              setStatus(
+                t("knockoutReadyStatus", {
+                  round: getRoundLabel(context.focusRound),
+                }),
+              );
+            }
           } catch (err) {
             setStatus(err.message);
           }

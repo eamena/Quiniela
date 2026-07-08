@@ -92,9 +92,10 @@ app.get("/api/participants/:participantId/predictions", (req, res) => {
       WHERE p.participant_id = ?
       ORDER BY
         CASE 
-          WHEN m.stage = 'Octavos de final' THEN 0
-          WHEN m.stage = '16avos de final' THEN 1
-          ELSE 2
+          WHEN m.stage = 'Cuartos de final' THEN 0
+          WHEN m.stage = 'Octavos de final' THEN 1
+          WHEN m.stage = '16avos de final' THEN 2
+          ELSE 3
         END ASC,
         m.row_number ASC`,
     )
@@ -198,32 +199,47 @@ app.get("/api/participants/:participantId/predictions", (req, res) => {
     });
   }
 
-  // Sort: Cuartos (Quarter-finals) first, then Octavos (Round of 16), then 16avos (Round of 32), then bracket/knockout stages by date, group stage after
+  // Sort with explicit stage priority so bracket rounds are always shown
+  // in the intended order regardless of whether they come as labels or codes.
   predictions.sort((a, b) => {
-    // Cuartos de final should come first
-    const aIsCuartos = a.stage === "Cuartos de final";
-    const bIsCuartos = b.stage === "Cuartos de final";
-    if (aIsCuartos && !bIsCuartos) return -1;
-    if (!aIsCuartos && bIsCuartos) return 1;
+    const stageRank = (stage) => {
+      const s = String(stage || "")
+        .trim()
+        .toLowerCase();
+      if (!s) return 900;
+      if (
+        s === "semi_finals" ||
+        s.includes("semifinal") ||
+        s.includes("semi-final")
+      )
+        return 0;
+      if (
+        s === "quarter_finals" ||
+        s.includes("cuartos") ||
+        s.includes("quarter-final")
+      )
+        return 1;
+      if (s === "last_16" || s.includes("octavos") || s.includes("round of 16"))
+        return 2;
+      if (s === "last_32" || s.includes("16avos") || s.includes("round of 32"))
+        return 3;
+      if (s === "final" || s === "final de") return 4;
+      if (/^grupo\s|^group\s/.test(s)) return 900;
+      if (/^(last_32|last_16|quarter_finals|semi_finals|final)$/.test(s))
+        return 5;
+      return 6;
+    };
 
-    // Then Octavos de final
-    const aIsOctavos = a.stage === "Octavos de final";
-    const bIsOctavos = b.stage === "Octavos de final";
-    if (aIsOctavos && !bIsOctavos) return -1;
-    if (!aIsOctavos && bIsOctavos) return 1;
-
-    // Then 16avos de final
-    const aIs16avos = a.stage === "16avos de final";
-    const bIs16avos = b.stage === "16avos de final";
-    if (aIs16avos && !bIs16avos) return -1;
-    if (!aIs16avos && bIs16avos) return 1;
+    const ar = stageRank(a.stage);
+    const br = stageRank(b.stage);
+    if (ar !== br) return ar - br;
 
     // Then other bracket stages by date
     const isBracketStage = (stage) => {
       if (!stage) return false;
-      if (/^(LAST_32|LAST_16|QUARTER_FINALS|SEMI_FINALS|FINAL)$/.test(stage))
+      if (/^(LAST_32|LAST_16|QUARTER_FINALS|SEMI_FINALS|FINAL)$/i.test(stage))
         return true;
-      return !/^grupo\s/i.test(stage);
+      return !/^grupo\s|^group\s/i.test(stage);
     };
 
     const ap = isBracketStage(a.stage) ? 0 : 1;
