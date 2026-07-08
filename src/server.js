@@ -198,9 +198,15 @@ app.get("/api/participants/:participantId/predictions", (req, res) => {
     });
   }
 
-  // Sort: Octavos (Round of 16) first, then 16avos (Round of 32), then bracket/knockout stages by date, group stage after
+  // Sort: Cuartos (Quarter-finals) first, then Octavos (Round of 16), then 16avos (Round of 32), then bracket/knockout stages by date, group stage after
   predictions.sort((a, b) => {
-    // Octavos de final should come first
+    // Cuartos de final should come first
+    const aIsCuartos = a.stage === "Cuartos de final";
+    const bIsCuartos = b.stage === "Cuartos de final";
+    if (aIsCuartos && !bIsCuartos) return -1;
+    if (!aIsCuartos && bIsCuartos) return 1;
+
+    // Then Octavos de final
     const aIsOctavos = a.stage === "Octavos de final";
     const bIsOctavos = b.stage === "Octavos de final";
     if (aIsOctavos && !bIsOctavos) return -1;

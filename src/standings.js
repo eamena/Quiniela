@@ -70,25 +70,48 @@ function getLatestMatches(limit = 20) {
   const safeLimit = Math.max(1, Math.min(Number(limit) || 20, 200));
   return db
     .prepare(
-      `SELECT
-        m.id,
-        m.stage,
-        m.home_team AS homeTeam,
-        m.away_team AS awayTeam,
-        r.home_score AS homeScore,
-        r.away_score AS awayScore,
-        r.pen_home AS penHome,
-        r.pen_away AS penAway,
-        r.status,
-        r.source,
-        r.kickoff_utc AS kickoffUtc,
-        r.updated_at AS updatedAt
-      FROM matches m
-      LEFT JOIN results r ON r.match_id = m.id
+      `SELECT * FROM (
+        SELECT
+          m.id,
+          m.stage,
+          m.home_team AS homeTeam,
+          m.away_team AS awayTeam,
+          r.home_score AS homeScore,
+          r.away_score AS awayScore,
+          r.pen_home AS penHome,
+          r.pen_away AS penAway,
+          r.status,
+          r.source,
+          r.kickoff_utc AS kickoffUtc,
+          r.updated_at AS updatedAt
+        FROM matches m
+        LEFT JOIN results r ON r.match_id = m.id
+
+        UNION ALL
+
+        SELECT
+          km.id * -1 AS id,
+          CASE km.round_code
+            WHEN 'QUARTER_FINALS' THEN 'Cuartos de final'
+            WHEN 'SEMI_FINALS'    THEN 'Semifinales'
+            WHEN 'FINAL'          THEN 'Final'
+          END AS stage,
+          km.home_team AS homeTeam,
+          km.away_team AS awayTeam,
+          km.home_score AS homeScore,
+          km.away_score AS awayScore,
+          NULL AS penHome,
+          NULL AS penAway,
+          km.status,
+          km.source,
+          km.kickoff_utc AS kickoffUtc,
+          km.updated_at AS updatedAt
+        FROM knockout_matches km
+        WHERE km.round_code IN ('QUARTER_FINALS', 'SEMI_FINALS', 'FINAL')
+      )
       ORDER BY
-        CASE WHEN r.kickoff_utc IS NULL THEN 1 ELSE 0 END,
-        datetime(r.kickoff_utc) ASC,
-        m.row_number ASC
+        CASE WHEN kickoffUtc IS NULL THEN 1 ELSE 0 END,
+        datetime(kickoffUtc) ASC
       LIMIT ?`,
     )
     .all(safeLimit);
