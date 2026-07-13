@@ -716,10 +716,24 @@
               </button>
               <button
                 class="filter-chip"
-                data-filter="16avos"
-                data-i18n="filter16avos"
+                data-filter="final"
+                data-i18n="filterFinal"
               >
-                16avos de final
+                Final match
+              </button>
+              <button
+                class="filter-chip active"
+                data-filter="semis"
+                data-i18n="filterSemis"
+              >
+                Semifinals
+              </button>
+              <button
+                class="filter-chip"
+                data-filter="cuartos"
+                data-i18n="filterCuartos"
+              >
+                Cuartos de final
               </button>
               <button
                 class="filter-chip"
@@ -729,11 +743,11 @@
                 Octavos de final
               </button>
               <button
-                class="filter-chip active"
-                data-filter="cuartos"
-                data-i18n="filterCuartos"
+                class="filter-chip"
+                data-filter="16avos"
+                data-i18n="filter16avos"
               >
-                Cuartos de final
+                16avos de final
               </button>
               <button
                 class="filter-chip"
@@ -1015,7 +1029,9 @@
           filterAll: "All",
           filter16avos: "Round of 32",
           filterOctavos: "Round of 16",
+          filterSemis: "Semifinals",
           filterCuartos: "Quarter-finals",
+          filterFinal: "Final match",
           filterFinished: "Finished",
           filterLive: "Live",
           filterUpcoming: "Upcoming",
@@ -1123,7 +1139,9 @@
           filterAll: "Todos",
           filter16avos: "16avos de final",
           filterOctavos: "Octavos de final",
+          filterSemis: "Semifinales",
           filterCuartos: "Cuartos de final",
+          filterFinal: "Partido final",
           filterFinished: "Finalizados",
           filterLive: "En vivo",
           filterUpcoming: "Próximos",
@@ -1206,7 +1224,8 @@
           played: 0,
         },
         locale: "en",
-        matchFilter: "cuartos",
+        matchFilter: "semis",
+        matchFilterTouched: false,
         botCron: null,
         botEnabled: true,
         botIntervalMinutes: null,
@@ -1353,6 +1372,9 @@
         }
         if (/cuartos/i.test(text)) {
           return state.locale === "en" ? "Quarter-finals" : "Cuartos de final";
+        }
+        if (/semi/i.test(text)) {
+          return state.locale === "en" ? "Semifinals" : "Semifinales";
         }
         const groupFromSpanish = text.match(/^grupo\s+(.+)$/i);
         const groupFromEnglish = text.match(/^group\s+(.+)$/i);
@@ -1601,6 +1623,42 @@
         return t("statusUnknown");
       }
 
+      function isFinalStage(stage) {
+        return (
+          String(stage || "")
+            .trim()
+            .toUpperCase() === "FINAL"
+        );
+      }
+
+      function hasKnownTeam(teamName) {
+        const team = String(teamName || "").trim();
+        return Boolean(team) && team.toUpperCase() !== "TBD";
+      }
+
+      function syncActiveMatchFilterChip() {
+        document
+          .querySelectorAll(".filter-chip")
+          .forEach((chip) =>
+            chip.classList.toggle(
+              "active",
+              chip.dataset.filter === state.matchFilter,
+            ),
+          );
+      }
+
+      function maybeAutoSelectMatchFilter(rows) {
+        if (state.matchFilterTouched) return;
+        const hasFinalMatch = rows.some(
+          (row) =>
+            isFinalStage(row.stage) &&
+            hasKnownTeam(row.homeTeam) &&
+            hasKnownTeam(row.awayTeam),
+        );
+        state.matchFilter = hasFinalMatch ? "final" : "semis";
+        syncActiveMatchFilterChip();
+      }
+
       function getFilteredMatches(rows) {
         if (state.matchFilter === "all") return rows;
         if (state.matchFilter === "16avos") {
@@ -1609,8 +1667,14 @@
         if (state.matchFilter === "octavos") {
           return rows.filter((row) => row.stage && /octavos/i.test(row.stage));
         }
+        if (state.matchFilter === "semis") {
+          return rows.filter((row) => row.stage && /semi/i.test(row.stage));
+        }
         if (state.matchFilter === "cuartos") {
           return rows.filter((row) => row.stage && /cuartos/i.test(row.stage));
+        }
+        if (state.matchFilter === "final") {
+          return rows.filter((row) => isFinalStage(row.stage));
         }
         return rows.filter(
           (row) => statusPill(row.status) === state.matchFilter,
@@ -2102,6 +2166,7 @@
 
         state.standings = standingsRes.standings || [];
         state.latestMatches = matchesRes.matches || [];
+        maybeAutoSelectMatchFilter(state.latestMatches);
 
         const updatedAtValues = state.latestMatches
           .map((m) => m.updatedAt)
@@ -2196,9 +2261,8 @@
       document.querySelectorAll(".filter-chip").forEach((chip) => {
         chip.addEventListener("click", () => {
           state.matchFilter = chip.dataset.filter;
-          document
-            .querySelectorAll(".filter-chip")
-            .forEach((c) => c.classList.toggle("active", c === chip));
+          state.matchFilterTouched = true;
+          syncActiveMatchFilterChip();
           renderLatestMatches(state.latestMatches);
         });
       });
