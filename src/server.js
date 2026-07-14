@@ -12,7 +12,11 @@ const {
 const { scorePrediction } = require("./scoring");
 const { syncResultsFromApi } = require("./scoreProvider");
 const { startBot } = require("./bot");
-const { getKnockoutContext, upsertKnockoutPredictions } = require("./knockout");
+const {
+  autoBackupSemifinalsOnWindowClose,
+  getKnockoutContext,
+  upsertKnockoutPredictions,
+} = require("./knockout");
 
 const app = express();
 const port = Number(process.env.PORT || 3000);
@@ -163,11 +167,40 @@ app.get("/api/participants/:participantId/predictions", (req, res) => {
     [/semi/i, "SEMI_FINALS"],
     [/^final$/i, "FINAL"],
   ];
-  const stagesInRows = new Set(rows.map((r) => r.stage).filter(Boolean));
+
+  const toRoundCode = (stage) => {
+    const text = String(stage || "").trim();
+    if (!text) return null;
+    const found = STAGE_TO_ROUND_CODE.find(([pattern]) => pattern.test(text));
+    return found ? found[1] : null;
+  };
+
+  const hasKnownTeams = (row) => {
+    const isKnown = (team) => {
+      const value = String(team || "")
+        .trim()
+        .toUpperCase();
+      return Boolean(value) && value !== "TBD" && value !== "POR DEFINIR";
+    };
+    return isKnown(row.homeTeam) && isKnown(row.awayTeam);
+  };
+
+  const importedRowsByRound = new Map();
+  for (const row of predictions) {
+    const roundCode = toRoundCode(row.stage);
+    if (!roundCode) continue;
+    if (!importedRowsByRound.has(roundCode)) {
+      importedRowsByRound.set(roundCode, []);
+    }
+    importedRowsByRound.get(roundCode).push(row);
+  }
+
+  // Consider a round as covered only when imported rows have concrete teams.
+  // This prevents stale/placeholder xlsx rows from hiding real knockout rows.
   const coveredRoundCodes = new Set(
-    STAGE_TO_ROUND_CODE.filter(([pattern]) =>
-      [...stagesInRows].some((s) => pattern.test(s)),
-    ).map(([, code]) => code),
+    Array.from(importedRowsByRound.entries())
+      .filter(([, roundRows]) => roundRows.some((row) => hasKnownTeams(row)))
+      .map(([roundCode]) => roundCode),
   );
 
   for (const row of knockoutRows) {
@@ -267,6 +300,7 @@ app.get("/api/participants/:participantId/predictions", (req, res) => {
 });
 
 app.get("/api/knockout/context", (req, res) => {
+  autoBackupSemifinalsOnWindowClose();
   const participantIdRaw = req.query.participantId;
   const participantId =
     participantIdRaw === undefined ? null : Number(participantIdRaw);
@@ -420,6 +454,7 @@ app.get("/test-participant", (_req, res) => {
 
 function boot() {
   initDb();
+  autoBackupSemifinalsOnWindowClose();
   db.prepare(
     "INSERT OR IGNORE INTO participants (name, source_col) VALUES (?, ?)",
   ).run(TEST_PARTICIPANT_NAME, -999);

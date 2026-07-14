@@ -9,6 +9,9 @@
     "import": "node src/cli/import.js",
     "import16avos": "node src/cli/import16avos.js",
     "import8avos": "node src/cli/import8avos.js",
+    "importCuartos": "node src/cli/importCuartos.js",
+    "backupSemifinals": "node src/cli/backupSemifinals.js",
+    "restoreSemifinals": "node src/cli/restoreSemifinals.js",
     "sync": "node src/cli/sync.js"
   },
   "keywords": [],

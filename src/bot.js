@@ -1,4 +1,5 @@
 const { syncResultsFromApi, getActivityLevel } = require("./scoreProvider");
+const { autoBackupSemifinalsOnWindowClose } = require("./knockout");
 
 // Polling intervals in milliseconds
 const INTERVALS = {
@@ -17,6 +18,12 @@ async function tick() {
   running = true;
   try {
     await syncResultsFromApi();
+    const backup = autoBackupSemifinalsOnWindowClose();
+    if (backup.created) {
+      console.log(
+        `[bot] Auto semifinal backup created (${backup.rows} rows): ${backup.snapshotKey}`,
+      );
+    }
   } catch (err) {
     console.error("[bot] Sync failed:", err.message);
   } finally {
@@ -51,6 +58,18 @@ function startBot() {
   }
 
   console.log("[bot] Starting adaptive sync bot...");
+
+  // If semis are already closed at startup, take one idempotent backup.
+  try {
+    const backup = autoBackupSemifinalsOnWindowClose();
+    if (backup.created) {
+      console.log(
+        `[bot] Auto semifinal backup created on startup (${backup.rows} rows): ${backup.snapshotKey}`,
+      );
+    }
+  } catch (err) {
+    console.error("[bot] Semifinal auto-backup check failed:", err.message);
+  }
 
   // Run an immediate sync on startup, then begin adaptive scheduling
   tick().then(() => scheduleNext());

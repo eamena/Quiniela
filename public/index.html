@@ -2020,7 +2020,10 @@
         if (!state.testMode) return;
         const body = document.getElementById("knockoutRecordsBody");
         const note = document.getElementById("knockoutRecordsNote");
-        const rows = recordsData?.predictions || [];
+        const rows = (recordsData?.predictions || []).filter(
+          (row) =>
+            Number.isInteger(row.predHome) && Number.isInteger(row.predAway),
+        );
         if (!rows.length) {
           body.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#64748b;">${t("knockoutDbRecordsEmpty")}</td></tr>`;
           note.textContent = recordsData?.locks?.length
@@ -2049,6 +2052,10 @@
       function renderParticipantPredictions(rows) {
         const body = document.getElementById("participantPredictionsBody");
         body.innerHTML = rows
+          .filter(
+            (row) =>
+              Number.isInteger(row.predHome) && Number.isInteger(row.predAway),
+          )
           .map((row) => {
             const resultText =
               Number.isInteger(row.realHome) && Number.isInteger(row.realAway)
