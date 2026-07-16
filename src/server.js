@@ -240,23 +240,23 @@ app.get("/api/participants/:participantId/predictions", (req, res) => {
         .trim()
         .toLowerCase();
       if (!s) return 900;
+      if (s === "final" || s === "final de") return 0;
       if (
         s === "semi_finals" ||
         s.includes("semifinal") ||
         s.includes("semi-final")
       )
-        return 0;
+        return 1;
       if (
         s === "quarter_finals" ||
         s.includes("cuartos") ||
         s.includes("quarter-final")
       )
-        return 1;
-      if (s === "last_16" || s.includes("octavos") || s.includes("round of 16"))
         return 2;
-      if (s === "last_32" || s.includes("16avos") || s.includes("round of 32"))
+      if (s === "last_16" || s.includes("octavos") || s.includes("round of 16"))
         return 3;
-      if (s === "final" || s === "final de") return 4;
+      if (s === "last_32" || s.includes("16avos") || s.includes("round of 32"))
+        return 4;
       if (/^grupo\s|^group\s/.test(s)) return 900;
       if (/^(last_32|last_16|quarter_finals|semi_finals|final)$/.test(s))
         return 5;
